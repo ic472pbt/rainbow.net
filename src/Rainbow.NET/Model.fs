@@ -8,7 +8,7 @@ type Node =
     | Var of string
     | Mul of float * Node
     | Add of Node * Node
-    | Raise of Node
+    | Dub of Node
     | Color of string*string*int
     with
         static member (+)(n1: Node, n2: Node) = Add(n1, n2)
@@ -19,7 +19,7 @@ type Node =
             | Var v -> Mul(k, Var v)
             | Mul(a,n) -> Mul(k*a, n)
             | Add(a,b) -> Add(Mul(k,a), Mul(k,b))
-            | Raise n -> Mul(k, Raise(n))
+            | Dub n -> Mul(k, Dub(n))
             | Color(a,b,c) -> Mul(k, Color(a,b,c))
         static member (~-)(n: Node) =
             match n with
@@ -27,7 +27,7 @@ type Node =
             | Var v -> Mul(-1.0, Var v)
             | Mul(k,n) -> Mul(-k, n)
             | Add(a,b) -> Add(-a,-b)
-            | Raise n -> Mul(-1.0, Raise(n))
+            | Dub n -> Mul(-1.0, Dub(n))
             | Color(a,b,c) -> Mul(-1.0, Color(a,b,c))
 
 
@@ -56,7 +56,7 @@ type Model(N: int) =
                     |> Array.mapi (fun i v -> me.CreateInput(List.rev vars[i], v))
             inputs, me.CreateOutput(vars[varNames.Length - 1], varNames[varNames.Length - 1])
         member _.CreateInput(series:IEnumerable<float>, name: string) = 
-            inputs.Add(name,Harmonics(series).ToSignal |> Input)
+            inputs.Add(name, Harmonics(series).ToSignal |> Input)
             printfn "-> input var %s added signal \n%O" name inputs[name].AsSignal
             inputs[name].AsSignal
         member _.CreateOutput(series:IEnumerable<float>, name: string) = 
@@ -81,7 +81,7 @@ type Model(N: int) =
                 | Var name -> inputs[name].AsSignal
                 | Mul(k, n) -> k * innerLoop n
                 | Add(a, b) -> Sum(innerLoop a, innerLoop b)
-                | Raise(n) -> !^(innerLoop n)
+                | Dub(n) -> !^(innerLoop n)
             innerLoop node |> Signal.Collect
         member _.Evaluate(x: IEnumerable<float>) =
             let rec innerLoop (inputsValues:Map<string, float>) = function
@@ -96,7 +96,7 @@ type Model(N: int) =
                 | Var name -> inputsValues[name]
                 | Mul(k, n) -> k * innerLoop inputsValues n
                 | Add(a, b) -> innerLoop inputsValues a + innerLoop inputsValues b
-                | Raise(n) -> let v = innerLoop inputsValues n in 2.0*v*v - 1.0
+                | Dub(n) -> let v = innerLoop inputsValues n in 2.0*v*v - 1.0
             let rec eval (map:Map<string, float>) (L:KeyValuePair<string, NodeType> list) = 
                 match L, map.Count with
                 | [], _ -> map

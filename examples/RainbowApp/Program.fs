@@ -3,12 +3,16 @@
 let model = Model(8)
 // Three inputs boolean function example. 
 // define inputs
-let X1 = model.CreateInput([-1.0; 1.0; -1.0; 1.0;-1.0; 1.0;-1.0; 1.0;], "x1")
-let X2 = model.CreateInput([-1.0; 1.0; 1.0; -1.0;-1.0; 1.0; 1.0; -1.0;], "x2")
-let X3 = model.CreateInput([-1.0; -1.0; -1.0; -1.0; 1.0; 1.0; 1.0; 1.0;], "x3")
+//let X1 = model.CreateInput([-1.0; 1.0; -1.0; 1.0;-1.0; 1.0;-1.0; 1.0;], "x1")
+//let X2 = model.CreateInput([-1.0; 1.0; 1.0; -1.0;-1.0; 1.0; 1.0; -1.0;], "x2")
+//let X3 = model.CreateInput([-1.0; -1.0; -1.0; -1.0; 1.0; 1.0; 1.0; 1.0;], "x3")
+
+let X1 = model.CreateInput([1.0; 2.0; 3.0; 4.0; 5.0; 6.0; 7.0; 8.0;], "x1")
+let X2 = model.CreateInput([2.0; 3.0; 4.0; 5.0; 6.0; 7.0; 8.0; 1.0;], "x2")
+let X3 = model.CreateInput([3.0; 4.0; 5.0; 6.0; 7.0; 8.0; 1.0; 2.0;], "x3")
 
 // define non-linear node
-let N = model.CreateNode(-Raise(0.25 * (Var "x1" + Var "x2")) - 0.25 * Var "x2" - Bias(3.0/4.0), "n")
+let N = model.CreateNode(-Dub(0.25 * (Var "x1" + Var "x2")) - 0.25 * Var "x2" - Bias(3.0/4.0), "n")
 // time reconstruction
 let T = model.CreateNode(2.0 * Var "x3" + 0.5 * Var "x1" + Var "x2" + 4.0 * Var "n" + Bias(3.5), "t")
 
