@@ -30,11 +30,12 @@
         {
             splitContainer1 = new SplitContainer();
             StructureDg = new DataGridView();
+            SolveBt = new Button();
             groupBox2 = new GroupBox();
             DrainLb = new ListBox();
             groupBox1 = new GroupBox();
-            SourceList = new ListBox();
-            DrainConstantCb = new CheckBox();
+            MatrixDg = new DataGridView();
+            listBox1 = new ListBox();
             ((System.ComponentModel.ISupportInitialize)splitContainer1).BeginInit();
             splitContainer1.Panel1.SuspendLayout();
             splitContainer1.Panel2.SuspendLayout();
@@ -42,6 +43,7 @@
             ((System.ComponentModel.ISupportInitialize)StructureDg).BeginInit();
             groupBox2.SuspendLayout();
             groupBox1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)MatrixDg).BeginInit();
             SuspendLayout();
             // 
             // splitContainer1
@@ -58,11 +60,12 @@
             // 
             // splitContainer1.Panel2
             // 
-            splitContainer1.Panel2.Controls.Add(DrainConstantCb);
+            splitContainer1.Panel2.Controls.Add(listBox1);
+            splitContainer1.Panel2.Controls.Add(SolveBt);
             splitContainer1.Panel2.Controls.Add(groupBox2);
             splitContainer1.Panel2.Controls.Add(groupBox1);
             splitContainer1.Size = new Size(1000, 450);
-            splitContainer1.SplitterDistance = 249;
+            splitContainer1.SplitterDistance = 190;
             splitContainer1.TabIndex = 0;
             // 
             // StructureDg
@@ -76,16 +79,28 @@
             StructureDg.ReadOnly = true;
             StructureDg.RowHeadersWidth = 51;
             StructureDg.RowTemplate.Height = 29;
-            StructureDg.Size = new Size(1000, 249);
+            StructureDg.Size = new Size(1000, 190);
             StructureDg.TabIndex = 0;
-            StructureDg.RowEnter += StructureDg_RowEnter;
+            StructureDg.SelectionChanged += StructureDg_SelectionChanged;
+            // 
+            // SolveBt
+            // 
+            SolveBt.Enabled = false;
+            SolveBt.Location = new Point(636, 23);
+            SolveBt.Name = "SolveBt";
+            SolveBt.Size = new Size(143, 29);
+            SolveBt.TabIndex = 1;
+            SolveBt.Text = "Solve SLE";
+            SolveBt.UseVisualStyleBackColor = true;
+            SolveBt.Click += SolveBt_Click;
             // 
             // groupBox2
             // 
             groupBox2.Controls.Add(DrainLb);
-            groupBox2.Location = new Point(332, 2);
+            groupBox2.Dock = DockStyle.Left;
+            groupBox2.Location = new Point(448, 0);
             groupBox2.Name = "groupBox2";
-            groupBox2.Size = new Size(321, 191);
+            groupBox2.Size = new Size(182, 256);
             groupBox2.TabIndex = 0;
             groupBox2.TabStop = false;
             groupBox2.Text = "Energy drain";
@@ -97,40 +112,43 @@
             DrainLb.ItemHeight = 20;
             DrainLb.Location = new Point(3, 23);
             DrainLb.Name = "DrainLb";
-            DrainLb.Size = new Size(315, 165);
+            DrainLb.Size = new Size(176, 230);
             DrainLb.TabIndex = 0;
+            DrainLb.SelectedIndexChanged += DrainLb_SelectedIndexChanged;
             // 
             // groupBox1
             // 
-            groupBox1.Controls.Add(SourceList);
-            groupBox1.Location = new Point(12, 3);
+            groupBox1.Controls.Add(MatrixDg);
+            groupBox1.Dock = DockStyle.Left;
+            groupBox1.Location = new Point(0, 0);
             groupBox1.Name = "groupBox1";
-            groupBox1.Size = new Size(314, 191);
+            groupBox1.Size = new Size(448, 256);
             groupBox1.TabIndex = 0;
             groupBox1.TabStop = false;
             groupBox1.Text = "Energy sources";
             // 
-            // SourceList
+            // MatrixDg
             // 
-            SourceList.Dock = DockStyle.Fill;
-            SourceList.FormattingEnabled = true;
-            SourceList.ItemHeight = 20;
-            SourceList.Location = new Point(3, 23);
-            SourceList.Name = "SourceList";
-            SourceList.SelectionMode = SelectionMode.MultiSimple;
-            SourceList.Size = new Size(308, 165);
-            SourceList.TabIndex = 0;
-            SourceList.SelectedIndexChanged += SourceList_SelectedIndexChanged;
+            MatrixDg.AllowUserToAddRows = false;
+            MatrixDg.AllowUserToDeleteRows = false;
+            MatrixDg.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            MatrixDg.Dock = DockStyle.Fill;
+            MatrixDg.Location = new Point(3, 23);
+            MatrixDg.Name = "MatrixDg";
+            MatrixDg.ReadOnly = true;
+            MatrixDg.RowHeadersWidth = 51;
+            MatrixDg.RowTemplate.Height = 29;
+            MatrixDg.Size = new Size(442, 230);
+            MatrixDg.TabIndex = 1;
             // 
-            // DrainConstantCb
+            // listBox1
             // 
-            DrainConstantCb.AutoSize = true;
-            DrainConstantCb.Location = new Point(671, 26);
-            DrainConstantCb.Name = "DrainConstantCb";
-            DrainConstantCb.Size = new Size(189, 24);
-            DrainConstantCb.TabIndex = 1;
-            DrainConstantCb.Text = "Drain constant to target";
-            DrainConstantCb.UseVisualStyleBackColor = true;
+            listBox1.FormattingEnabled = true;
+            listBox1.ItemHeight = 20;
+            listBox1.Location = new Point(797, 3);
+            listBox1.Name = "listBox1";
+            listBox1.Size = new Size(173, 244);
+            listBox1.TabIndex = 2;
             // 
             // Constructor
             // 
@@ -142,12 +160,12 @@
             Text = "Constructor";
             splitContainer1.Panel1.ResumeLayout(false);
             splitContainer1.Panel2.ResumeLayout(false);
-            splitContainer1.Panel2.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)splitContainer1).EndInit();
             splitContainer1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)StructureDg).EndInit();
             groupBox2.ResumeLayout(false);
             groupBox1.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)MatrixDg).EndInit();
             ResumeLayout(false);
         }
 
@@ -158,7 +176,8 @@
         private GroupBox groupBox1;
         private GroupBox groupBox2;
         private ListBox DrainLb;
-        private ListBox SourceList;
-        private CheckBox DrainConstantCb;
+        private DataGridView MatrixDg;
+        private Button SolveBt;
+        private ListBox listBox1;
     }
 }

@@ -330,7 +330,7 @@
             SampleSizeNud.Name = "SampleSizeNud";
             SampleSizeNud.Size = new Size(81, 27);
             SampleSizeNud.TabIndex = 1;
-            SampleSizeNud.Value = new decimal(new int[] { 2, 0, 0, 0 });
+            SampleSizeNud.Value = new decimal(new int[] { 3, 0, 0, 0 });
             // 
             // SamplesDg
             // 

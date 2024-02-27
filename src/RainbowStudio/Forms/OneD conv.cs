@@ -22,6 +22,7 @@ namespace RainbowStudio
         private readonly int N;
         private readonly Model model;
         private Signal? outputSignal;
+        private string OutputName = string.Empty;
         private Dictionary<string, Signal> inputSignals = new();
 
         private readonly Chart chart;
@@ -154,17 +155,27 @@ namespace RainbowStudio
                     Zip(Enumerable.Range(0, selectedSeries.Count)).
                     OrderByDescending(kv => kv.First);
             int[] idxs;
+            int mid = respectedOutput.Count() / 2;
             switch ((int)SampleSizeNud.Value)
             {
                 case 2:
                     idxs = new int[] { respectedOutput.Last().Second, respectedOutput.First().Second };
-                    goto case 3;
+                    goto case 4;
                 case 3:
-                    int mid = respectedOutput.Count() / 2;
                     idxs = new int[] {
                         respectedOutput.Last().Second,
                         respectedOutput.First().Second,
                         respectedOutput.ElementAt(mid).Second
+                    };
+                    goto case 4;
+                case 4:
+                    var beggining = respectedOutput.Take(2);
+                    var end = respectedOutput.Skip(respectedOutput.Count() - 2);
+                    idxs = new int[] {
+                        end.Last().Second,
+                        beggining.First().Second,
+                        end.First().Second,
+                        beggining.Last().Second,
                     };
                     foreach (var s in inputSeries)
                     {
@@ -178,11 +189,16 @@ namespace RainbowStudio
                         foreach (var idx in idxs) samplesList.Add(s.Value[idx]);
                         sampleSeries.Add(s.Key, samplesList);
                     }
-                    outputSignal = model.CreateOutput(sampleSeries[OutputsListCb.Text], OutputsListCb.Text);
+                    if (!model.Outputs.ContainsKey(OutputsListCb.Text))
+                    {
+                        outputSignal = model.CreateOutput(sampleSeries[OutputsListCb.Text], OutputsListCb.Text);
+                        OutputName = OutputsListCb.Text;
+                    }
 
                     foreach (var s in inputSeries)
                     {
-                        inputSignals.Add(s.Key, model.CreateInput(sampleSeries[s.Key], s.Key));
+                        if (!inputSignals.ContainsKey(s.Key))
+                            inputSignals.Add(s.Key, model.CreateInput(sampleSeries[s.Key], s.Key));
                     }
                     break;
                 default:
@@ -266,7 +282,7 @@ namespace RainbowStudio
 
         private void OpenConstructorBt_Click(object sender, EventArgs e)
         {
-            var constructor = new Constructor(model, inputSignals, outputSignal, (int)SampleSizeNud.Value);
+            var constructor = new Constructor(model, inputSignals, outputSignal, OutputName, (int)SampleSizeNud.Value);
             constructor.ShowDialog();
         }
     }

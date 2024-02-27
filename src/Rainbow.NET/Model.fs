@@ -59,10 +59,12 @@ type Model(N: int) =
             inputs.Add(name, Harmonics(series).ToSignal |> Input)
             printfn "-> input var %s added signal \n%O" name inputs[name].AsSignal
             inputs[name].AsSignal
+        member _.Inputs = inputs
         member _.CreateOutput(series:IEnumerable<float>, name: string) = 
             output.Add(name, Harmonics(series).ToSignal)
             printfn "-> output var %s added signal \n%O" name output[name]
             output[name]
+        member _.Outputs = output
         member my.CreateNode(node, name) = 
             nodes.Add(name, node)
             inputs.Add(name, my.nodeAsSignal node |> Node)
