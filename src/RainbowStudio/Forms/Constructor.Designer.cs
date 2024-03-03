@@ -32,6 +32,7 @@
             splitContainer1 = new SplitContainer();
             StructureDg = new DataGridView();
             groupBox3 = new GroupBox();
+            AddStarBt = new Button();
             x2Bt = new Button();
             AddToInputsBt = new Button();
             NodeNameTb = new TextBox();
@@ -43,7 +44,6 @@
             groupBox1 = new GroupBox();
             MatrixDg = new DataGridView();
             toolTip1 = new ToolTip(components);
-            AddStarBt = new Button();
             ((System.ComponentModel.ISupportInitialize)splitContainer1).BeginInit();
             splitContainer1.Panel1.SuspendLayout();
             splitContainer1.Panel2.SuspendLayout();
@@ -107,6 +107,17 @@
             groupBox3.TabStop = false;
             groupBox3.Text = "Create node";
             // 
+            // AddStarBt
+            // 
+            AddStarBt.Enabled = false;
+            AddStarBt.Location = new Point(6, 151);
+            AddStarBt.Name = "AddStarBt";
+            AddStarBt.Size = new Size(131, 29);
+            AddStarBt.TabIndex = 5;
+            AddStarBt.Text = "Star";
+            AddStarBt.UseVisualStyleBackColor = true;
+            AddStarBt.Click += AddStarBt_Click;
+            // 
             // x2Bt
             // 
             x2Bt.Enabled = false;
@@ -126,7 +137,7 @@
             AddToInputsBt.Name = "AddToInputsBt";
             AddToInputsBt.Size = new Size(131, 29);
             AddToInputsBt.TabIndex = 2;
-            AddToInputsBt.Text = "Annihilating";
+            AddToInputsBt.Text = "Absorber";
             AddToInputsBt.UseVisualStyleBackColor = true;
             AddToInputsBt.Click += AddToInputsBt_Click;
             // 
@@ -213,17 +224,6 @@
             MatrixDg.RowTemplate.Height = 29;
             MatrixDg.Size = new Size(341, 230);
             MatrixDg.TabIndex = 1;
-            // 
-            // AddStarBt
-            // 
-            AddStarBt.Enabled = false;
-            AddStarBt.Location = new Point(6, 151);
-            AddStarBt.Name = "AddStarBt";
-            AddStarBt.Size = new Size(131, 29);
-            AddStarBt.TabIndex = 5;
-            AddStarBt.Text = "Star";
-            AddStarBt.UseVisualStyleBackColor = true;
-            AddStarBt.Click += AddStarBt_Click;
             // 
             // Constructor
             // 

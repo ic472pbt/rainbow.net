@@ -37,6 +37,7 @@
             HifhFreqBt = new Button();
             OutputsLV = new ListView();
             groupBox1 = new GroupBox();
+            ExportCsvBt = new Button();
             groupBox3 = new GroupBox();
             GenerateConvBt = new Button();
             WindowNud = new NumericUpDown();
@@ -63,6 +64,7 @@
             splitContainer4 = new SplitContainer();
             OpenConstructorBt = new Button();
             SubnetsDg = new DataGridView();
+            saveFileDialog1 = new SaveFileDialog();
             tabControl1.SuspendLayout();
             RawPlotTP.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)splitContainer1).BeginInit();
@@ -190,6 +192,7 @@
             // 
             // groupBox1
             // 
+            groupBox1.Controls.Add(ExportCsvBt);
             groupBox1.Controls.Add(groupBox3);
             groupBox1.Controls.Add(InputsLV);
             groupBox1.Location = new Point(5, 3);
@@ -198,6 +201,16 @@
             groupBox1.TabIndex = 0;
             groupBox1.TabStop = false;
             groupBox1.Text = "Inputs";
+            // 
+            // ExportCsvBt
+            // 
+            ExportCsvBt.Location = new Point(196, 144);
+            ExportCsvBt.Name = "ExportCsvBt";
+            ExportCsvBt.Size = new Size(171, 29);
+            ExportCsvBt.TabIndex = 2;
+            ExportCsvBt.Text = "Export to CSV";
+            ExportCsvBt.UseVisualStyleBackColor = true;
+            ExportCsvBt.Click += ExportCsvBt_Click;
             // 
             // groupBox3
             // 
@@ -293,6 +306,7 @@
             OutputsListCb.Name = "OutputsListCb";
             OutputsListCb.Size = new Size(151, 28);
             OutputsListCb.TabIndex = 4;
+            OutputsListCb.SelectedIndexChanged += OutputsListCb_SelectedIndexChanged;
             // 
             // label3
             // 
@@ -489,6 +503,10 @@
             SubnetsDg.Size = new Size(514, 326);
             SubnetsDg.TabIndex = 0;
             // 
+            // saveFileDialog1
+            // 
+            saveFileDialog1.Filter = "CSV files | *.csv";
+            // 
             // OneD_conv
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
@@ -569,5 +587,7 @@
         private SplitContainer splitContainer4;
         private Button OpenConstructorBt;
         private DataGridView SubnetsDg;
+        private Button ExportCsvBt;
+        private SaveFileDialog saveFileDialog1;
     }
 }

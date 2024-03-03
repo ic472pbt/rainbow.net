@@ -295,12 +295,12 @@ namespace RainbowStudio
         {
             var constructor = new Constructor(model, inputSignals, outputSignal, OutputName);
             var res = constructor.ShowDialog();
-            if(res == DialogResult.OK)
+            if (res == DialogResult.OK)
             {
                 SubnetsDg.Rows.Clear();
                 SubnetsDg.Columns.Clear();
 
-                SubnetsDg.Columns.Add("NodeName","Name");
+                SubnetsDg.Columns.Add("NodeName", "Name");
                 int j = 0;
                 for (int k = 0; k < model.HalfN; k++)
                 {
@@ -320,11 +320,48 @@ namespace RainbowStudio
                     {
                         var wave = kv.Value.TryGetWave(k);
                         if (wave is not null)
-                            if(wave.Value.isConstant)
+                            if (wave.Value.isConstant)
                                 SubnetsDg.Rows[idx].Cells[$"wave{k}"].Value = wave.Value.C.Real;
                             else
                                 SubnetsDg.Rows[idx].Cells[$"wave{k}"].Value = wave.Value.C;
                     }
+                }
+            }
+        }
+
+        private async void ExportCsvBt_Click(object sender, EventArgs e)
+        {
+            var res = saveFileDialog1.ShowDialog();
+            if (res == DialogResult.OK)
+            {
+                using var file = File.OpenWrite(saveFileDialog1.FileName);
+                using var writer = new StreamWriter(file);
+                for (int i = 0; i < N; i++)
+                {
+                    await writer.WriteLineAsync(
+                        string.Join(";",
+                            InputsLV.SelectedItems.
+                                OfType<ListViewItem>().
+                                Select(inputName => inputSeries[inputName.Text][i].ToString()).
+                                Concat(OutputsLV.SelectedItems.
+                                    OfType<ListViewItem>().
+                                    Select(outputName => outputSeries[outputName.Text][i].ToString())
+                                )
+                         )
+                    );
+                }
+            }
+        }
+
+        // Change target name
+        private void OutputsListCb_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if(model is not null)
+            {
+                if (!model.Outputs.ContainsKey(OutputsListCb.Text))
+                {
+                    outputSignal = model.CreateOutput(sampleSeries[OutputsListCb.Text], OutputsListCb.Text);
+                    OutputName = OutputsListCb.Text;
                 }
             }
         }

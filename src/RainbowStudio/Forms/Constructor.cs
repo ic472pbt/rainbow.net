@@ -267,10 +267,10 @@ namespace RainbowStudio.Forms
                 node += Node.NewVar(c.Name);
             }
             // If drained to the other signal adjust the bias
-            if (SelectedInput is not null)
+            if (DrainLb.SelectedItem is not null)
             {
                 var bias = model.nodeAsSignal(node).GetConstant;
-                node += Node.NewBias(inputSignals[SelectedInput].GetConstant - bias);
+                node += Node.NewBias(outputSignal.GetConstant - bias);
             }
 
             var signal = model.CreateNode(node, NodeNameTb.Text);
