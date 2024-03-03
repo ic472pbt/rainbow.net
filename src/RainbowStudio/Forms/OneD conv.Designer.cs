@@ -62,6 +62,7 @@
             Energy = new DataGridViewTextBoxColumn();
             groupBox6 = new GroupBox();
             splitContainer4 = new SplitContainer();
+            ConvertOutBt = new Button();
             OpenConstructorBt = new Button();
             SubnetsDg = new DataGridView();
             saveFileDialog1 = new SaveFileDialog();
@@ -470,6 +471,7 @@
             // 
             // splitContainer4.Panel1
             // 
+            splitContainer4.Panel1.Controls.Add(ConvertOutBt);
             splitContainer4.Panel1.Controls.Add(OpenConstructorBt);
             // 
             // splitContainer4.Panel2
@@ -478,6 +480,17 @@
             splitContainer4.Size = new Size(514, 385);
             splitContainer4.SplitterDistance = 55;
             splitContainer4.TabIndex = 0;
+            // 
+            // ConvertOutBt
+            // 
+            ConvertOutBt.Enabled = false;
+            ConvertOutBt.Location = new Point(219, 13);
+            ConvertOutBt.Name = "ConvertOutBt";
+            ConvertOutBt.Size = new Size(154, 29);
+            ConvertOutBt.TabIndex = 1;
+            ConvertOutBt.Text = "Convert to output";
+            ConvertOutBt.UseVisualStyleBackColor = true;
+            ConvertOutBt.Click += ConvertOutBt_Click;
             // 
             // OpenConstructorBt
             // 
@@ -502,6 +515,8 @@
             SubnetsDg.RowTemplate.Height = 29;
             SubnetsDg.Size = new Size(514, 326);
             SubnetsDg.TabIndex = 0;
+            SubnetsDg.RowEnter += SubnetsDg_RowEnter;
+            SubnetsDg.RowLeave += SubnetsDg_RowLeave;
             // 
             // saveFileDialog1
             // 
@@ -589,5 +604,6 @@
         private DataGridView SubnetsDg;
         private Button ExportCsvBt;
         private SaveFileDialog saveFileDialog1;
+        private Button ConvertOutBt;
     }
 }

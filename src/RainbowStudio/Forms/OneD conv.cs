@@ -356,7 +356,7 @@ namespace RainbowStudio
         // Change target name
         private void OutputsListCb_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if(model is not null)
+            if (model is not null)
             {
                 if (!model.Outputs.ContainsKey(OutputsListCb.Text))
                 {
@@ -364,6 +364,33 @@ namespace RainbowStudio
                     OutputName = OutputsListCb.Text;
                 }
             }
+        }
+
+        private void ConvertOutBt_Click(object sender, EventArgs e)
+        {
+            string NodeName = (string)SubnetsDg.Rows[SubnetsDg.SelectedCells[0].RowIndex].Cells["NodeName"].Value;
+            List<double> evaluates = new();
+            for (int i = 0; i < N; i++)
+            {
+                List<double> X = new();
+                foreach (ListViewItem item in InputsLV.Items)
+                {
+                    X.Add(inputSeries[item.Text][i]);
+                }
+                evaluates.Add(model.Evaluate(X)[NodeName]);
+            }
+            OutputsLV.Items.Add(NodeName);
+            outputSeries.Add(NodeName, evaluates);
+        }
+
+        private void SubnetsDg_RowLeave(object sender, DataGridViewCellEventArgs e)
+        {
+            ConvertOutBt.Enabled = false;
+        }
+
+        private void SubnetsDg_RowEnter(object sender, DataGridViewCellEventArgs e)
+        {
+            ConvertOutBt.Enabled = true;
         }
     }
 }
