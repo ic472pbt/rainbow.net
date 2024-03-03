@@ -2,6 +2,7 @@
 open System
 open System.Numerics
 open System.Collections.Generic
+open System.Diagnostics
 
         
     type DFT(s: Harmonics) =
@@ -24,9 +25,13 @@ open System.Collections.Generic
         member _.Item i = Seq.item i x
         member me.ToSignal = 
             let dft = DFT(me)
-            let uLimit = if N % 2 = 0 then N/2 else N/2 + 1 
+            let uLimit = N/2 // if N % 2 = 0 then N/2 + 1 else N/2 
             dft[0..uLimit] 
-                |> Array.mapi (fun k el -> if el.Magnitude < Config.TOL then None else Some <| Signal.FromComplex(k,N,el)) 
+                |> Array.mapi (fun k el -> 
+                                if el.Magnitude < Config.TOL then 
+                                    None 
+                                else 
+                                    Some <| Signal.FromComplex(k,N,el)) 
                 |> Array.choose id
                 |> Array.reduce (+) 
                 

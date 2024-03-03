@@ -330,7 +330,7 @@
             SampleSizeNud.Name = "SampleSizeNud";
             SampleSizeNud.Size = new Size(81, 27);
             SampleSizeNud.TabIndex = 1;
-            SampleSizeNud.Value = new decimal(new int[] { 3, 0, 0, 0 });
+            SampleSizeNud.Value = new decimal(new int[] { 5, 0, 0, 0 });
             // 
             // SamplesDg
             // 
@@ -477,10 +477,13 @@
             // 
             // SubnetsDg
             // 
+            SubnetsDg.AllowUserToAddRows = false;
+            SubnetsDg.AllowUserToDeleteRows = false;
             SubnetsDg.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             SubnetsDg.Dock = DockStyle.Fill;
             SubnetsDg.Location = new Point(0, 0);
             SubnetsDg.Name = "SubnetsDg";
+            SubnetsDg.ReadOnly = true;
             SubnetsDg.RowHeadersWidth = 51;
             SubnetsDg.RowTemplate.Height = 29;
             SubnetsDg.Size = new Size(514, 326);

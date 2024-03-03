@@ -11,18 +11,19 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Numerics;
 using Microsoft.FSharp.Core;
+using System.Diagnostics;
 
 namespace RainbowStudio.Forms
 {
     public partial class Constructor : Form
     {
         private readonly Model model;
-        private readonly Dictionary<string, Signal> inputSignals;
+        internal readonly Dictionary<string, Signal> inputSignals;
         private readonly Signal outputSignal;
         private readonly string OutputName;
+        private string? SelectedInput = null;
 
-        private int CurrentK = 0;
-        public Constructor(Model model, Dictionary<string, Signal> inputSignals, Signal outputSignal, string OutputName, int Length)
+        public Constructor(Model model, Dictionary<string, Signal> inputSignals, Signal outputSignal, string OutputName)
         {
             InitializeComponent();
 
@@ -31,7 +32,7 @@ namespace RainbowStudio.Forms
             this.outputSignal = outputSignal;
             this.OutputName = OutputName;
 
-            int N = Length / 2 + 1;
+            int N = model.HalfN;
             StructureDg.Columns.Add(new DataGridViewTextBoxColumn() { Name = "k", HeaderText = "k", AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells });
             StructureDg.Rows.Add(N);
             for (int i = 0; i < N; i++) { StructureDg.Rows[i].Cells["k"].Value = i; }
@@ -41,7 +42,7 @@ namespace RainbowStudio.Forms
                 for (int i = 0; i < N; i++)
                 {
                     var wave = item.Value.TryGetWave(i);
-                    StructureDg.Rows[i].Cells[item.Key].Value = wave.Value.C;
+                    if (wave is not null) StructureDg.Rows[i].Cells[item.Key].Value = wave.Value.C;
                 }
             }
         }
@@ -104,13 +105,16 @@ namespace RainbowStudio.Forms
             {
                 foreach (int i in RowIndexes)
                 {
-                    int innerI = InnerIndexStart;
-                    MatrixDg.Rows[2 * innerI - InnerIndexStart].Cells[StructureDg.Columns[j].Name].Value = ((Complex)StructureDg.Rows[i].Cells[j].Value).Real;
-                    MatrixDg.Rows[2 * innerI + 1 - InnerIndexStart].Cells[StructureDg.Columns[j].Name].Value = ((Complex)StructureDg.Rows[i].Cells[j].Value).Imaginary;
-                    // k reference
-                    MatrixDg.Rows[2 * innerI - InnerIndexStart].Tag = i;
-                    MatrixDg.Rows[2 * innerI + 1 - InnerIndexStart].Tag = i;
-                    innerI++;
+                    if (StructureDg.Rows[i].Cells[j].Value is not null)
+                    {
+                        int innerI = InnerIndexStart;
+                        MatrixDg.Rows[2 * innerI - InnerIndexStart].Cells[StructureDg.Columns[j].Name].Value = ((Complex)StructureDg.Rows[i].Cells[j].Value).Real;
+                        MatrixDg.Rows[2 * innerI + 1 - InnerIndexStart].Cells[StructureDg.Columns[j].Name].Value = ((Complex)StructureDg.Rows[i].Cells[j].Value).Imaginary;
+                        // k reference
+                        MatrixDg.Rows[2 * innerI - InnerIndexStart].Tag = i;
+                        MatrixDg.Rows[2 * innerI + 1 - InnerIndexStart].Tag = i;
+                        innerI++;
+                    }
                 }
             }
 
@@ -141,6 +145,7 @@ namespace RainbowStudio.Forms
             ToggleSolveBtEnabled();
         }
 
+        private MathNet.Numerics.LinearAlgebra.Vector<double> Y;
         private void SolveBt_Click(object sender, EventArgs e)
         {
             double[,] A = new double[MatrixDg.Rows.Count, MatrixDg.Columns.Count];
@@ -155,20 +160,22 @@ namespace RainbowStudio.Forms
             List<double> bList = new();
             List<int> Blocks = new();
             FSharpOption<Wave> wave;
-            Complex C = new();
+            SelectedInput = null;
             foreach (DataGridViewRow row in MatrixDg.Rows)
             {
                 if (row.Tag is not null && !Blocks.Contains((int)row.Tag))
                 {
+                    Complex C;
                     if (inputSignals.ContainsKey((string)DrainLb.SelectedItem))
                     {
                         wave = inputSignals[(string)DrainLb.SelectedItem].TryGetWave((int)row.Tag);
-                        if (wave.Value is not null) C = wave.Value.C; else C = 0.0;
+                        if (wave is not null) C = wave.Value.C; else C = 0.0;
+                        SelectedInput = (string)DrainLb.SelectedItem;
                     }
                     else
                     {
                         wave = outputSignal.TryGetWave((int)row.Tag);
-                        if (wave.Value is not null) C = wave.Value.C; else C = 0.0;
+                        if (wave is not null) C = wave.Value.C; else C = 0.0;
                     }
                     if ((int)row.Tag == 0)
                     {
@@ -189,11 +196,65 @@ namespace RainbowStudio.Forms
                     Vector<double>.Build.Dense(bList.ToArray());
             try
             {
-                var Y = X.Solve(b);
+                Y = X.Solve(b);
                 listBox1.Items.Clear();
                 foreach (double item in Y) listBox1.Items.Add(item);
             }
             catch (Exception ex) { MessageBox.Show(ex.Message); }
+        }
+
+        private void AddToInputsBt_Click(object sender, EventArgs e)
+        {
+            if (model.Nodes.ContainsKey(NodeNameTb.Text))
+            {
+                MessageBox.Show($"Node {NodeNameTb.Text} already exists.");
+                return;
+            }
+            var node = Node.NewBias(0.0);
+            for (int i = 0; i < MatrixDg.Columns.Count; i++)
+            {
+                node += Y[i] * Node.NewVar(MatrixDg.Columns[i].Name);
+            }
+            // If input drain is selected then annihilate it
+            if (SelectedInput is not null)
+            {
+                node -= Node.NewVar(SelectedInput);
+                // also cancel the constant
+                var bias = model.nodeAsSignal(node).GetConstant;
+                node -= Node.NewBias(bias);
+            }
+            Debug.WriteLine($"Adding {NodeNameTb.Text}");
+            var signal = model.CreateNode(node, NodeNameTb.Text);
+            inputSignals.Add(NodeNameTb.Text, signal);
+            DialogResult = DialogResult.OK;
+        }
+
+        // Add non-linear node
+        private void x2Bt_Click(object sender, EventArgs e)
+        {
+            var node = Node.NewBias(0.0);
+            double BiasCorrection = 0.0;
+            foreach (DataGridViewColumn c in MatrixDg.Columns)
+            {
+                double EnergyCorrection = 1.0 / Math.Sqrt(inputSignals[c.Name].Energy);
+                node += EnergyCorrection * Node.NewVar(c.Name);
+                BiasCorrection += inputSignals[c.Name].GetConstant * EnergyCorrection;
+            }
+            node = Node.NewDub(node - Node.NewBias(BiasCorrection));
+            var wave = model.nodeAsSignal(node).TryGetWave(0);
+            if (wave is not null)
+                node -= Node.NewBias(wave.Value.C.Real);
+            Debug.WriteLine($"Adding {NodeNameTb.Text}");
+            var signal = model.CreateNode(node, NodeNameTb.Text);
+            inputSignals.Add(NodeNameTb.Text, signal);
+            DialogResult = DialogResult.OK;
+
+        }
+
+        private void NodeNameTb_TextChanged(object sender, EventArgs e)
+        {
+            AddToInputsBt.Enabled = !string.IsNullOrWhiteSpace(NodeNameTb.Text) && listBox1.Items.Count > 0;
+            x2Bt.Enabled = !string.IsNullOrWhiteSpace(NodeNameTb.Text) && MatrixDg.Columns.Count > 0;
         }
     }
 }

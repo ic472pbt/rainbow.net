@@ -2,6 +2,8 @@
 open System
 open System.IO
 open System.Collections.Generic
+open System.Text
+open System.Diagnostics
 
 type Node =
     | Bias of float
@@ -11,6 +13,40 @@ type Node =
     | Dub of Node
     | Color of string*string*int
     with
+        override me.ToString() =
+            let rec innerLoop n =
+                match n with
+                | Bias b -> b, abs(b).ToString("F3")
+                | Var v -> 1.0, $"[{v}]"
+                | Mul(a,n) -> 
+                    if abs a < Config.TOL then 
+                        0.0, "" 
+                    elif abs(abs a - 1.0) < Config.TOL then
+                        let aLoop = innerLoop n
+                        a * (fst aLoop), $"{snd aLoop}"
+                    else 
+                        let aLoop = innerLoop n
+                        a * fst aLoop, $"{abs (a * fst aLoop):f3} * {snd aLoop}"
+                | Add(a,b) ->                
+                    let aLoop, bLoop = innerLoop a, innerLoop b
+                    if abs (fst aLoop) < Config.TOL then
+                        if (abs <| fst(bLoop)) < Config.TOL then 
+                            0.0, String.Empty 
+                        elif fst bLoop > 0.0 then fst bLoop, $"{snd bLoop}"
+                        else fst bLoop, $"{snd bLoop}"
+                    else 
+                        if (abs <| fst(bLoop)) < Config.TOL then 
+                            fst aLoop, $"{snd aLoop}" 
+                        elif fst bLoop > 0.0 then fst aLoop, $"{snd aLoop} + {snd bLoop}"
+                        else fst aLoop, $"{snd aLoop} - {snd bLoop}"
+                    //fst aLoop, $"{snd aLoop}" + if (abs <| fst(bLoop)) < Config.TOL then String.Empty elif fst bLoop > 0.0 then $" + {snd bLoop}" else $" - {snd bLoop}"
+                | Dub n -> 
+                    let aLoop = innerLoop n 
+                    let sign = if (abs <| fst(aLoop)) < Config.TOL then String.Empty elif fst aLoop > 0.0 then " + " else " - "
+                    1.0, $"^2({sign}{snd aLoop})"
+                | Color(a,b,c) -> 1.0, "C"
+            let aLoop = innerLoop me
+            if (abs <| fst(aLoop)) < Config.TOL then String.Empty elif fst aLoop > 0.0 then $"{snd aLoop}" else $"-{snd aLoop}"
         static member (+)(n1: Node, n2: Node) = Add(n1, n2)
         static member (-)(n1: Node, n2: Node) = Add(n1, -n2)
         static member (*)(k: float, n: Node) = 
@@ -41,6 +77,10 @@ type Model(N: int) =
     let nodes = Dictionary<string, Node>()
     let output = Dictionary<string,Signal>()
     with
+        /// The number of waves available in the model N/2
+        member _.HalfN = N/2 + 1
+        /// Nodes in the model
+        member _.Nodes = nodes
         member me.LoadData(fileName:string) =
             use file = File.OpenText fileName
             let varNames = 
@@ -57,7 +97,8 @@ type Model(N: int) =
             inputs, me.CreateOutput(vars[varNames.Length - 1], varNames[varNames.Length - 1])
         member _.CreateInput(series:IEnumerable<float>, name: string) = 
             inputs.Add(name, Harmonics(series).ToSignal |> Input)
-            printfn "-> input var %s added signal \n%O" name inputs[name].AsSignal
+            let debugString = sprintf "-> input var %s added signal \n%O" name inputs[name].AsSignal
+            printfn "%s" debugString; Debug.WriteLine(debugString)
             inputs[name].AsSignal
         member _.Inputs = inputs
         member _.CreateOutput(series:IEnumerable<float>, name: string) = 
@@ -80,7 +121,9 @@ type Model(N: int) =
                         2.0 * wave.Magnitude * Harmonics(inputs[name].AsSignal.ToTimeDomain(N) |> Array.map ((*)w >> (+)φ >> cos)).ToSignal
                     | None -> failwith $"target wave k = {k} not found in {outpName}"
                 | Bias c -> Signal.Constant c
-                | Var name -> inputs[name].AsSignal
+                | Var name -> 
+                    let varSignal = inputs[name].AsSignal
+                    varSignal
                 | Mul(k, n) -> k * innerLoop n
                 | Add(a, b) -> Sum(innerLoop a, innerLoop b)
                 | Dub(n) -> !^(innerLoop n)

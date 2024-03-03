@@ -29,6 +29,13 @@ type Wave(k, N, C: Complex) =
                 |> List.map float 
                 |> List.map (fun t -> 2.0*C.Magnitude * cos(w * t + C.Phase)) 
                 |> List.toArray
+    /// Normalize reflected waves
+    member wave.Normalize =
+        match wave with
+        | w when w.Magnitude < Config.TOL -> Wave(0, N, 0.0)
+        | w when w.k < 0 ->  Wave(-w.k, w.N, Complex.Conjugate w.C)
+        | w when w.k > w.N/2 -> Wave(w.N - w.k, w.N, Complex.Conjugate w.C)
+        | w -> w
 
     override wave.ToString() =
         match wave with

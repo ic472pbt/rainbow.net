@@ -28,19 +28,28 @@
         /// </summary>
         private void InitializeComponent()
         {
+            components = new System.ComponentModel.Container();
             splitContainer1 = new SplitContainer();
             StructureDg = new DataGridView();
+            groupBox3 = new GroupBox();
+            x2Bt = new Button();
+            AddToInputsBt = new Button();
+            NodeNameTb = new TextBox();
+            label1 = new Label();
+            listBox1 = new ListBox();
             SolveBt = new Button();
             groupBox2 = new GroupBox();
             DrainLb = new ListBox();
             groupBox1 = new GroupBox();
             MatrixDg = new DataGridView();
-            listBox1 = new ListBox();
+            toolTip1 = new ToolTip(components);
+            AddStarBt = new Button();
             ((System.ComponentModel.ISupportInitialize)splitContainer1).BeginInit();
             splitContainer1.Panel1.SuspendLayout();
             splitContainer1.Panel2.SuspendLayout();
             splitContainer1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)StructureDg).BeginInit();
+            groupBox3.SuspendLayout();
             groupBox2.SuspendLayout();
             groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)MatrixDg).BeginInit();
@@ -60,6 +69,7 @@
             // 
             // splitContainer1.Panel2
             // 
+            splitContainer1.Panel2.Controls.Add(groupBox3);
             splitContainer1.Panel2.Controls.Add(listBox1);
             splitContainer1.Panel2.Controls.Add(SolveBt);
             splitContainer1.Panel2.Controls.Add(groupBox2);
@@ -83,10 +93,73 @@
             StructureDg.TabIndex = 0;
             StructureDg.SelectionChanged += StructureDg_SelectionChanged;
             // 
+            // groupBox3
+            // 
+            groupBox3.Controls.Add(AddStarBt);
+            groupBox3.Controls.Add(x2Bt);
+            groupBox3.Controls.Add(AddToInputsBt);
+            groupBox3.Controls.Add(NodeNameTb);
+            groupBox3.Controls.Add(label1);
+            groupBox3.Location = new Point(535, 58);
+            groupBox3.Name = "groupBox3";
+            groupBox3.Size = new Size(143, 186);
+            groupBox3.TabIndex = 3;
+            groupBox3.TabStop = false;
+            groupBox3.Text = "Create node";
+            // 
+            // x2Bt
+            // 
+            x2Bt.Enabled = false;
+            x2Bt.Location = new Point(6, 114);
+            x2Bt.Name = "x2Bt";
+            x2Bt.Size = new Size(131, 29);
+            x2Bt.TabIndex = 4;
+            x2Bt.Text = "Add mixing";
+            toolTip1.SetToolTip(x2Bt, "Move frequencies");
+            x2Bt.UseVisualStyleBackColor = true;
+            x2Bt.Click += x2Bt_Click;
+            // 
+            // AddToInputsBt
+            // 
+            AddToInputsBt.Enabled = false;
+            AddToInputsBt.Location = new Point(6, 79);
+            AddToInputsBt.Name = "AddToInputsBt";
+            AddToInputsBt.Size = new Size(131, 29);
+            AddToInputsBt.TabIndex = 2;
+            AddToInputsBt.Text = "Add annihilating";
+            AddToInputsBt.UseVisualStyleBackColor = true;
+            AddToInputsBt.Click += AddToInputsBt_Click;
+            // 
+            // NodeNameTb
+            // 
+            NodeNameTb.Location = new Point(6, 46);
+            NodeNameTb.Name = "NodeNameTb";
+            NodeNameTb.Size = new Size(131, 27);
+            NodeNameTb.TabIndex = 1;
+            NodeNameTb.TextChanged += NodeNameTb_TextChanged;
+            // 
+            // label1
+            // 
+            label1.AutoSize = true;
+            label1.Location = new Point(6, 23);
+            label1.Name = "label1";
+            label1.Size = new Size(49, 20);
+            label1.TabIndex = 0;
+            label1.Text = "Name";
+            // 
+            // listBox1
+            // 
+            listBox1.FormattingEnabled = true;
+            listBox1.ItemHeight = 20;
+            listBox1.Location = new Point(684, 12);
+            listBox1.Name = "listBox1";
+            listBox1.Size = new Size(173, 244);
+            listBox1.TabIndex = 2;
+            // 
             // SolveBt
             // 
             SolveBt.Enabled = false;
-            SolveBt.Location = new Point(636, 23);
+            SolveBt.Location = new Point(535, 23);
             SolveBt.Name = "SolveBt";
             SolveBt.Size = new Size(143, 29);
             SolveBt.TabIndex = 1;
@@ -98,7 +171,7 @@
             // 
             groupBox2.Controls.Add(DrainLb);
             groupBox2.Dock = DockStyle.Left;
-            groupBox2.Location = new Point(448, 0);
+            groupBox2.Location = new Point(347, 0);
             groupBox2.Name = "groupBox2";
             groupBox2.Size = new Size(182, 256);
             groupBox2.TabIndex = 0;
@@ -122,7 +195,7 @@
             groupBox1.Dock = DockStyle.Left;
             groupBox1.Location = new Point(0, 0);
             groupBox1.Name = "groupBox1";
-            groupBox1.Size = new Size(448, 256);
+            groupBox1.Size = new Size(347, 256);
             groupBox1.TabIndex = 0;
             groupBox1.TabStop = false;
             groupBox1.Text = "Energy sources";
@@ -138,17 +211,17 @@
             MatrixDg.ReadOnly = true;
             MatrixDg.RowHeadersWidth = 51;
             MatrixDg.RowTemplate.Height = 29;
-            MatrixDg.Size = new Size(442, 230);
+            MatrixDg.Size = new Size(341, 230);
             MatrixDg.TabIndex = 1;
             // 
-            // listBox1
+            // AddStarBt
             // 
-            listBox1.FormattingEnabled = true;
-            listBox1.ItemHeight = 20;
-            listBox1.Location = new Point(797, 3);
-            listBox1.Name = "listBox1";
-            listBox1.Size = new Size(173, 244);
-            listBox1.TabIndex = 2;
+            AddStarBt.Location = new Point(6, 151);
+            AddStarBt.Name = "AddStarBt";
+            AddStarBt.Size = new Size(131, 29);
+            AddStarBt.TabIndex = 5;
+            AddStarBt.Text = "Add star";
+            AddStarBt.UseVisualStyleBackColor = true;
             // 
             // Constructor
             // 
@@ -163,6 +236,8 @@
             ((System.ComponentModel.ISupportInitialize)splitContainer1).EndInit();
             splitContainer1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)StructureDg).EndInit();
+            groupBox3.ResumeLayout(false);
+            groupBox3.PerformLayout();
             groupBox2.ResumeLayout(false);
             groupBox1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)MatrixDg).EndInit();
@@ -179,5 +254,12 @@
         private DataGridView MatrixDg;
         private Button SolveBt;
         private ListBox listBox1;
+        private GroupBox groupBox3;
+        private Button AddToInputsBt;
+        private TextBox NodeNameTb;
+        private Label label1;
+        private Button x2Bt;
+        private ToolTip toolTip1;
+        private Button AddStarBt;
     }
 }

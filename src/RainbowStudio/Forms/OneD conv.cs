@@ -20,7 +20,7 @@ namespace RainbowStudio
         private Dictionary<string, List<double>> sampleSeries = new();
         private List<double> selectedSeries = new();
         private readonly int N;
-        private readonly Model model;
+        private Model? model = null;
         private Signal? outputSignal;
         private string OutputName = string.Empty;
         private Dictionary<string, Signal> inputSignals = new();
@@ -33,7 +33,6 @@ namespace RainbowStudio
             this.outputSeries = outputSeries;
             this.inputSeries = inputSeries;
             N = inputSeries.Values.First().Count;
-            model = new(N);
 
             InputsLV.Items.AddRange(inputSeries.Select(kv => new ListViewItem(kv.Key)).ToArray());
             OutputsLV.Items.AddRange(outputSeries.Select(kv => new ListViewItem(kv.Key)).ToArray());
@@ -160,14 +159,14 @@ namespace RainbowStudio
             {
                 case 2:
                     idxs = new int[] { respectedOutput.Last().Second, respectedOutput.First().Second };
-                    goto case 4;
+                    goto case 5;
                 case 3:
                     idxs = new int[] {
                         respectedOutput.Last().Second,
                         respectedOutput.First().Second,
                         respectedOutput.ElementAt(mid).Second
                     };
-                    goto case 4;
+                    goto case 5;
                 case 4:
                     var beggining = respectedOutput.Take(2);
                     var end = respectedOutput.Skip(respectedOutput.Count() - 2);
@@ -175,7 +174,18 @@ namespace RainbowStudio
                         end.Last().Second,
                         beggining.First().Second,
                         end.First().Second,
-                        beggining.Last().Second,
+                        beggining.Last().Second
+                    };
+                    goto case 5;
+                case 5:
+                    var beggining5 = respectedOutput.Take(2);
+                    var end5 = respectedOutput.Skip(respectedOutput.Count() - 2);
+                    idxs = new int[] {
+                        end5.Last().Second,
+                        beggining5.First().Second,
+                        end5.First().Second,
+                        beggining5.Last().Second,
+                        respectedOutput.ElementAt(mid).Second
                     };
                     foreach (var s in inputSeries)
                     {
@@ -189,6 +199,7 @@ namespace RainbowStudio
                         foreach (var idx in idxs) samplesList.Add(s.Value[idx]);
                         sampleSeries.Add(s.Key, samplesList);
                     }
+                    if (model is null) model = new(sampleSeries[OutputsListCb.Text].Count);
                     if (!model.Outputs.ContainsKey(OutputsListCb.Text))
                     {
                         outputSignal = model.CreateOutput(sampleSeries[OutputsListCb.Text], OutputsListCb.Text);
@@ -282,8 +293,40 @@ namespace RainbowStudio
 
         private void OpenConstructorBt_Click(object sender, EventArgs e)
         {
-            var constructor = new Constructor(model, inputSignals, outputSignal, OutputName, (int)SampleSizeNud.Value);
-            constructor.ShowDialog();
+            var constructor = new Constructor(model, inputSignals, outputSignal, OutputName);
+            var res = constructor.ShowDialog();
+            if(res == DialogResult.OK)
+            {
+                SubnetsDg.Rows.Clear();
+                SubnetsDg.Columns.Clear();
+
+                SubnetsDg.Columns.Add("NodeName","Name");
+                int j = 0;
+                for (int k = 0; k < model.HalfN; k++)
+                {
+                    j = SubnetsDg.Columns.Add($"wave{k}", k.ToString());
+                    SubnetsDg.Columns[j].AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
+                }
+                j = SubnetsDg.Columns.Add("Formula", "Formula");
+                SubnetsDg.Columns[j].AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
+
+
+                foreach (var kv in constructor.inputSignals)
+                {
+                    int idx = SubnetsDg.Rows.Add(kv.Key);
+                    if (model.Nodes.ContainsKey(kv.Key))
+                        SubnetsDg.Rows[idx].Cells["Formula"].Value = model.Nodes[kv.Key].ToString();
+                    for (int k = 0; k < model.HalfN; k++)
+                    {
+                        var wave = kv.Value.TryGetWave(k);
+                        if (wave is not null)
+                            if(wave.Value.isConstant)
+                                SubnetsDg.Rows[idx].Cells[$"wave{k}"].Value = wave.Value.C.Real;
+                            else
+                                SubnetsDg.Rows[idx].Cells[$"wave{k}"].Value = wave.Value.C;
+                    }
+                }
+            }
         }
     }
 }

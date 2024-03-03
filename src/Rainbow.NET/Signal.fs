@@ -1,5 +1,6 @@
 ﻿namespace Rainbow.NET
 open System.Numerics
+open System.Diagnostics
     type Signal =
         | Empty
         | Harmonic of Wave
@@ -14,11 +15,29 @@ open System.Numerics
                         let a = innerLoop acc w
                         innerLoop a z                        
                 innerLoop (Array.zeroCreate N) me
+            /// Get DC component of the signal
+            member me.GetConstant =
+                let rec innerLoop = function
+                    | Empty -> 0.0
+                    | Harmonic w when w.isConstant -> w.C.Real
+                    | Sum(w, z) -> innerLoop w + innerLoop z
+                    | _ -> 0.0
+                innerLoop me                
+            member my.Energy =
+                let rec innerLoop = function
+                    | Empty -> 0.0
+                    | Harmonic w -> w.Magnitude * w.Magnitude
+                    | Sum(w, z) -> innerLoop w + innerLoop z
+                innerLoop my              
             member me.TryGetWave(k) =
                 let rec innerLoop = function
                     | Empty -> None
                     | Harmonic h when h.k = k -> Some h
-                    | Sum(w, z) -> innerLoop w |> Option.orElseWith (fun () -> innerLoop z)
+                    | Sum(w, z) -> 
+                        match innerLoop w, innerLoop z with
+                        | Some w1, Some w2 -> Some(w1 + w2)
+                        | Some w, _ | _, Some w -> Some w
+                        | _ -> None
                     | _ -> None
                 innerLoop me
             override s.ToString() =
@@ -73,28 +92,57 @@ open System.Numerics
                 | Sum(A, B) -> 
                     !^A  + !^B + 4.0 * A * B + Signal.Constant 1.0
                         |> Signal.Collect
+            /// Chancel week waves, move reflected waves to the first half of the spectrum
             static member Normalize (w: Signal) = 
                 match w with
                 | Harmonic h when h.Magnitude < Config.TOL -> Signal.Zero
-                | Harmonic w when w.k < 0 ->
-                    Harmonic <| Wave(-w.k, w.N, Complex.Conjugate w.C)
-                | Harmonic w when w.k > w.N/2 ->
-                    Harmonic <| Wave(w.N - w.k, w.N, Complex.Conjugate w.C)
+                | Harmonic h when h.k < 0 ->
+                    Harmonic <| Wave(-h.k, h.N, Complex.Conjugate h.C)
+                | Harmonic h when h.k > h.N/2 ->
+                    Harmonic <| Wave(h.N - h.k, h.N, Complex.Conjugate h.C)
                 | _ -> w
             static member FromComplex(k: int, N: int, re: float, im: float) = Signal.FromComplex(k,N,Complex(re,im))
             static member FromComplex(k: int, N: int, C: Complex) = 
                 match k with
-                | k when k < N/2 -> Harmonic <| Wave(k, N, C)
+                | k when k <= N/2 -> Harmonic <| Wave(k, N, C)
                 | k -> Harmonic <| Wave(N-k, N, Complex.Conjugate C) // mirroring
+            /// Collect duplicate waves
             static member Collect (h: Signal) =
                let rec innerLoop (acc: Map<int, Signal>) = function
                    | Empty -> acc               
-                   | Harmonic w -> acc.Change(w.k, (function | None -> Some(Harmonic w) | Some V -> Some(V + Harmonic w)))
+                   | Harmonic w -> 
+                        let wave = w.Normalize
+                        acc.Change(wave.k, (function 
+                                            | None -> 
+                                                Debug.WriteLine($"step 0 create {wave.k} {w}");     
+                                                Some(Harmonic wave) 
+                                            | Some V -> 
+                                                Debug.WriteLine($"step 0 update {wave.k} {V} + {w}"); 
+                                                Some(V + Harmonic wave)))
                    | Sum(x, y) -> 
-                        let accX = innerLoop Map.empty x
-                        let accY = innerLoop Map.empty y
-                        Map.fold (fun (acc: Map<int, Signal>) key el -> acc.Change(key, (function | None -> Some(el) | Some V -> Some(V + el)))) accX accY
-               h 
-                |> innerLoop Map.empty 
-                |> Map.fold (fun acc _ el -> let nel = el |> Signal.Normalize in Sum(acc, nel)) Empty
+                        innerLoop (innerLoop acc x) y
+                        //(innerLoop Map.empty x, innerLoop Map.empty y)
+                            //||> Map.fold (fun acc key el -> 
+                            //                acc.Change(key, (function 
+                            //                                    | None -> 
+                            //                                        Debug.WriteLine($"step 1 create {key} {el}");     
+                            //                                        Some(el) 
+                            //                                    | Some V -> 
+                            //                                        Debug.WriteLine($"step 1 update {key} {V} + {el}"); 
+                            //                                        Some(V + el))))
+                            //|>  Map.fold (fun acc key el -> 
+                            //                acc.Change(key, (function 
+                            //                                    | None -> 
+                            //                                        Debug.WriteLine($"step 2 create {key} {el}");     
+                            //                                        Some(el) 
+                            //                                    | Some V -> 
+                            //                                        Debug.WriteLine($"step 2 update {key} {V} + {el}"); 
+                            //                                        Some(V + el)))) acc
+               Debug.Write($"was {h}");
+               let tmp =
+                   h 
+                    |> innerLoop Map.empty 
+                    |> Map.fold (fun acc _ el -> let nel = el in Sum(acc, nel)) Empty
+               Debug.Write($"become {tmp}");
+               tmp
 
