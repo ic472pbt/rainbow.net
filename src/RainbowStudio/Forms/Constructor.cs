@@ -138,6 +138,7 @@ namespace RainbowStudio.Forms
             SolveBt.Enabled =
                 DrainLb.SelectedItems.Count > 0 &&
                 MatrixDg.Rows.Count == MatrixDg.Columns.Count;
+            AddStarBt.Enabled = MatrixDg.Columns.Count > 0;
         }
 
         private void DrainLb_SelectedIndexChanged(object sender, EventArgs e)
@@ -255,6 +256,26 @@ namespace RainbowStudio.Forms
         {
             AddToInputsBt.Enabled = !string.IsNullOrWhiteSpace(NodeNameTb.Text) && listBox1.Items.Count > 0;
             x2Bt.Enabled = !string.IsNullOrWhiteSpace(NodeNameTb.Text) && MatrixDg.Columns.Count > 0;
+        }
+
+        private void AddStarBt_Click(object sender, EventArgs e)
+        {
+            var node = Node.NewBias(0.0);
+            // Sum all inputs with identity weights. Node = X1 + X2 + ...
+            foreach (DataGridViewColumn c in MatrixDg.Columns)
+            {
+                node += Node.NewVar(c.Name);
+            }
+            // If drained to the other signal adjust the bias
+            if (SelectedInput is not null)
+            {
+                var bias = model.nodeAsSignal(node).GetConstant;
+                node += Node.NewBias(inputSignals[SelectedInput].GetConstant - bias);
+            }
+
+            var signal = model.CreateNode(node, NodeNameTb.Text);
+            inputSignals.Add(NodeNameTb.Text, signal);
+            DialogResult = DialogResult.OK;
         }
     }
 }

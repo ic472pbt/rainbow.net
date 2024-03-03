@@ -114,7 +114,7 @@
             x2Bt.Name = "x2Bt";
             x2Bt.Size = new Size(131, 29);
             x2Bt.TabIndex = 4;
-            x2Bt.Text = "Add mixing";
+            x2Bt.Text = "Mixing";
             toolTip1.SetToolTip(x2Bt, "Move frequencies");
             x2Bt.UseVisualStyleBackColor = true;
             x2Bt.Click += x2Bt_Click;
@@ -126,7 +126,7 @@
             AddToInputsBt.Name = "AddToInputsBt";
             AddToInputsBt.Size = new Size(131, 29);
             AddToInputsBt.TabIndex = 2;
-            AddToInputsBt.Text = "Add annihilating";
+            AddToInputsBt.Text = "Annihilating";
             AddToInputsBt.UseVisualStyleBackColor = true;
             AddToInputsBt.Click += AddToInputsBt_Click;
             // 
@@ -216,12 +216,14 @@
             // 
             // AddStarBt
             // 
+            AddStarBt.Enabled = false;
             AddStarBt.Location = new Point(6, 151);
             AddStarBt.Name = "AddStarBt";
             AddStarBt.Size = new Size(131, 29);
             AddStarBt.TabIndex = 5;
-            AddStarBt.Text = "Add star";
+            AddStarBt.Text = "Star";
             AddStarBt.UseVisualStyleBackColor = true;
+            AddStarBt.Click += AddStarBt_Click;
             // 
             // Constructor
             // 
