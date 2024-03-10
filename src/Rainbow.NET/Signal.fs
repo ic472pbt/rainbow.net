@@ -86,16 +86,22 @@ open System.Diagnostics
                     else
                         Sum (a2 - 1.0 |> Signal.Constant, Wave(w.k * 2, w.N, a2 * cos fi2, 0.0) |> Harmonic)
                 | Harmonic w -> 
-                    let a2 = w.Magnitude*w.Magnitude in 
-                    let h = Harmonic <| Wave(w.k * 2, w.N, a2, w.Phase * 2.0) |> Signal.Normalize
-                    Sum(a2 - 1.0 |> Signal.Constant, h) |> Signal.Collect
+                    let w2 = w.C * w.C in 
+                    let h = Harmonic <| Wave(w.k * 2, w.N, w2 ) |> Signal.Normalize // a2, w.Phase * 2.0) |> Signal.Normalize
+                    Sum(w2.Magnitude - 1.0 |> Signal.Constant, h) |> Signal.Collect
+                | Sum(Empty, A) -> !^A
                 | Sum(A, B) -> 
-                    !^A  + !^B + 4.0 * A * B + Signal.Constant 1.0
+                    let sig1 = !^A  + !^B
+                    let sig2 = 4.0 * A * B
+                    sig1 + sig2 + Signal.Constant 1.0
                         |> Signal.Collect
             /// Chancel week waves, move reflected waves to the first half of the spectrum
             static member Normalize (w: Signal) = 
                 match w with
-                | Harmonic h when h.Magnitude < Config.TOL -> Signal.Zero
+                | Harmonic h when h.Magnitude < Config.TOL -> 
+                    Debug.WriteLine($"Cancel {h}")
+                    printfn "Cancel %A" h
+                    Signal.Zero
                 | Harmonic h when h.k < 0 ->
                     Harmonic <| Wave(-h.k, h.N, Complex.Conjugate h.C)
                 | Harmonic h when h.k > h.N/2 ->

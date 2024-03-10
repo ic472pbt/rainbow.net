@@ -126,7 +126,7 @@ type Model(N: int) =
                     varSignal
                 | Mul(k, n) -> k * innerLoop n
                 | Add(a, b) -> Sum(innerLoop a, innerLoop b)
-                | Dub(n) -> !^(innerLoop n)
+                | Dub(n) -> !^(innerLoop n |> Signal.Collect)
             innerLoop node |> Signal.Collect
         member _.Evaluate(x: IEnumerable<float>) =
             let rec innerLoop (inputsValues:Map<string, float>) = function

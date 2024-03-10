@@ -1,15 +1,24 @@
 ﻿open Rainbow.NET
 
+let model = Model(5)
+let X = model.CreateInput([-33.33; 89.67; -33.33; 88.67; -27.33], "x")
+let X1 = model.CreateInput([-32.33; 88.67; -33.33; 89.67; -27.33], "x1")
+let O = 0.022 * (Var "x" + Var "x1") - Bias 0.754
+let T = model.CreateNode(Dub(O), "T")
+//let N = model.CreateNode(Dub(0.022 * (Var "x" + Var "x1") - Bias 0.754) - Bias(2.432), "D")
+let Y = model.CreateOutput([-1.0; 1.0; -1.0; 1.0; -1.0;], "y")
+
+(*
 let model = Model(8)
 // Three inputs boolean function example. 
 // define inputs
-//let X1 = model.CreateInput([-1.0; 1.0; -1.0; 1.0;-1.0; 1.0;-1.0; 1.0;], "x1")
-//let X2 = model.CreateInput([-1.0; 1.0; 1.0; -1.0;-1.0; 1.0; 1.0; -1.0;], "x2")
-//let X3 = model.CreateInput([-1.0; -1.0; -1.0; -1.0; 1.0; 1.0; 1.0; 1.0;], "x3")
+let X1 = model.CreateInput([-1.0; 1.0; -1.0; 1.0;-1.0; 1.0;-1.0; 1.0;], "x1")
+let X2 = model.CreateInput([-1.0; 1.0; 1.0; -1.0;-1.0; 1.0; 1.0; -1.0;], "x2")
+let X3 = model.CreateInput([-1.0; -1.0; -1.0; -1.0; 1.0; 1.0; 1.0; 1.0;], "x3")
 
-let X1 = model.CreateInput([1.0; 2.0; 3.0; 4.0; 5.0; 6.0; 7.0; 8.0;], "x1")
-let X2 = model.CreateInput([2.0; 3.0; 4.0; 5.0; 6.0; 7.0; 8.0; 1.0;], "x2")
-let X3 = model.CreateInput([3.0; 4.0; 5.0; 6.0; 7.0; 8.0; 1.0; 2.0;], "x3")
+//let X1 = model.CreateInput([1.0; 2.0; 3.0; 4.0; 5.0; 6.0; 7.0; 8.0;], "x1")
+//let X2 = model.CreateInput([2.0; 3.0; 4.0; 5.0; 6.0; 7.0; 8.0; 1.0;], "x2")
+//let X3 = model.CreateInput([3.0; 4.0; 5.0; 6.0; 7.0; 8.0; 1.0; 2.0;], "x3")
 
 // define non-linear node
 let N = model.CreateNode(-Dub(0.25 * (Var "x1" + Var "x2")) - 0.25 * Var "x2" - Bias(3.0/4.0), "n")
@@ -39,16 +48,17 @@ let XOR = model.CreateNode(Color("y3", "t", 1)  + Color("y3", "t", 3), "xor")
 let rnd = [let R = System.Random() in for _ = 0 to 7 do yield R.NextDouble()]
 let Y4 = model.CreateOutput(rnd, "y4")
 
-let bias = Y4.TryGetWave 0 |> Option.map (fun w -> w.C.Real) |> Option.defaultValue 0.0 |> Bias 
+let bias = Y4.GetConstant |> Bias 
 let k1 = Y4.TryGetWave 4 |> Option.map (fun w -> w.C.Magnitude * cos(w.C.Phase)) |> Option.defaultValue 0.0
 let h2 = Y4.TryGetWave 2 |> Option.map (fun w -> w.C) |> Option.defaultValue (System.Numerics.Complex(0.0, 0.0))
 let x2complex = X2.TryGetWave 2 |> Option.map (fun w -> w.C) |> Option.defaultValue (System.Numerics.Complex(0.0, 0.0))
 let ncomplex = N.TryGetWave 2 |> Option.map (fun w -> w.C) |> Option.defaultValue (System.Numerics.Complex(0.0, 0.0))
 let det = x2complex.Real * ncomplex.Imaginary - ncomplex.Real * x2complex.Imaginary
+printfn "Determinant %f" det
 let k2 = (h2.Real * ncomplex.Imaginary - ncomplex.Real * h2.Imaginary)/det
 let k3 = (x2complex.Real * h2.Imaginary - h2.Real * x2complex.Imaginary)/det
 
-let RND = model.CreateNode(bias - k1 * Var "x1" + k2 * Var "x2" + k3 * Var "n" + Color("y4", "t", 1)  + Color("y4", "t", 3), "rnd")
+let RND = model.CreateNode(bias - k1 * Var "x1" + k2 * Var "x2" + k3 * Var "n" + Color("y4", "t", 1) + Color("y4", "t", 3), "rnd")
 
 let L =
     [
@@ -61,6 +71,7 @@ let L =
         [-1.0; 1.0; 1.0]
         [1.0; -1.0; 1.0]
     ]
+(*
 printfn "HXOR"
 L |> List.iter (fun t -> printfn "%A -> %f" t (model.Evaluate(t)["hxor"]))
 printfn "AND"
@@ -69,5 +80,10 @@ printfn "TWO"
 L |> List.iter (fun t -> printfn "%A -> %f" t (model.Evaluate(t)["two"]))
 printfn "XOR"
 L |> List.iter (fun t -> printfn "%A -> %f" t (model.Evaluate(t)["xor"]))
+*)
 printfn "RND"
 L |> List.iteri (fun i t -> let ev = model.Evaluate(t) in printfn "%A -> %f expected %f" t (ev["rnd"]) (rnd[i]) )
+
+let s = L |> List.map (fun t -> model.Evaluate(t)["rnd"]) in 
+let S = model.CreateOutput(s, "S")
+*)

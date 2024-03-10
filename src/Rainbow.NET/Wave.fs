@@ -33,6 +33,7 @@ type Wave(k, N, C: Complex) =
     member wave.Normalize =
         match wave with
         | w when w.Magnitude < Config.TOL -> Wave(0, N, 0.0)
+        | w when w.isMedian -> Wave(w.k, w.N, (cos w.Phase) * w.Magnitude, 0.0)
         | w when w.k < 0 ->  Wave(-w.k, w.N, Complex.Conjugate w.C)
         | w when w.k > w.N/2 -> Wave(w.N - w.k, w.N, Complex.Conjugate w.C)
         | w -> w

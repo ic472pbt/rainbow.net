@@ -340,7 +340,7 @@
             // SampleSizeNud
             // 
             SampleSizeNud.Location = new Point(97, 13);
-            SampleSizeNud.Maximum = new decimal(new int[] { 5, 0, 0, 0 });
+            SampleSizeNud.Maximum = new decimal(new int[] { 8, 0, 0, 0 });
             SampleSizeNud.Minimum = new decimal(new int[] { 2, 0, 0, 0 });
             SampleSizeNud.Name = "SampleSizeNud";
             SampleSizeNud.Size = new Size(81, 27);

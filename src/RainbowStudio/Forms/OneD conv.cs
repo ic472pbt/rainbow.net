@@ -212,6 +212,32 @@ namespace RainbowStudio
                             inputSignals.Add(s.Key, model.CreateInput(sampleSeries[s.Key], s.Key));
                     }
                     break;
+                case 8:
+                    foreach (var s in inputSeries)
+                    {
+                        List<double> samplesList = new();
+                        for (int idx = 0; idx < 8; idx++) samplesList.Add(s.Value[idx]);
+                        sampleSeries.Add(s.Key, samplesList);
+                    }
+                    foreach (var s in outputSeries)
+                    {
+                        List<double> samplesList = new();
+                        for (int idx = 0; idx < 8; idx++) samplesList.Add(s.Value[idx]);
+                        sampleSeries.Add(s.Key, samplesList);
+                    }
+                    if (model is null) model = new(sampleSeries[OutputsListCb.Text].Count);
+                    if (!model.Outputs.ContainsKey(OutputsListCb.Text))
+                    {
+                        outputSignal = model.CreateOutput(sampleSeries[OutputsListCb.Text], OutputsListCb.Text);
+                        OutputName = OutputsListCb.Text;
+                    }
+
+                    foreach (var s in inputSeries)
+                    {
+                        if (!inputSignals.ContainsKey(s.Key))
+                            inputSignals.Add(s.Key, model.CreateInput(sampleSeries[s.Key], s.Key));
+                    }
+                    break;
                 default:
                     break;
             }
