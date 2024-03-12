@@ -16,8 +16,9 @@ open System.Diagnostics
             dft[i] <- Complex(a/N,-b/N)
         member _.Item i = dft[i]
         member _.GetSlice(a: int option, b: int option) = dft[a.Value..b.Value]
+        member _.Coefitients = dft
             
-    and Harmonics(x: IEnumerable<float>) =
+    and Harmonics(x: seq<float>) =
         let N = Seq.length x
         let signal: float [] = x |> Seq.toArray
 
@@ -26,16 +27,19 @@ open System.Diagnostics
         member me.ToSignal = 
             let dft = DFT(me)
             let uLimit = N/2 // if N % 2 = 0 then N/2 + 1 else N/2 
-            dft[0..uLimit] 
-                |> Array.mapi (fun k el -> 
-                                if el.Magnitude < Config.TOL then 
-                                    None 
-                                else 
-                                    Some <| Signal.FromComplex(k,N,el)) 
-                |> Array.choose id
-                |> Array.reduce (+) 
+            match  
+                dft[0..uLimit] 
+                    |> Array.mapi (fun k el ->
+                                    if el.Magnitude < Config.TOL then 
+                                        None 
+                                    else 
+                                        Some <| Signal.FromComplex(k,N,el)) 
+                    |> Array.choose id
+            with 
+            | [||] -> Signal.Zero
+            | A -> A |> Array.reduce (+) 
                 
-        interface IEnumerable<float> with
+        interface seq<float> with
             member _.GetEnumerator() = signal.GetEnumerator()
             member _.GetEnumerator() = (Seq.cast<float> x).GetEnumerator()         
     

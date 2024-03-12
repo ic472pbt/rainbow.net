@@ -1,12 +1,13 @@
 ﻿open Rainbow.NET
 
-let model = Model(5)
-let X = model.CreateInput([-33.33; 89.67; -33.33; 88.67; -27.33], "x")
-let X1 = model.CreateInput([-32.33; 88.67; -33.33; 89.67; -27.33], "x1")
-let O = 0.022 * (Var "x" + Var "x1") - Bias 0.754
+let model = Model(4)
+let X = model.CreateInput([1.86616641; 1.942815513; -0.5760611293],"x")
+//let X = model.CreateInput([-33.33; 89.67; -33.33; 88.67; -27.33], "x")
+//let X1 = model.CreateInput([-32.33; 88.67; -33.33; 89.67; -27.33], "x1")
+let O = Var "x" 
 let T = model.CreateNode(Dub(O), "T")
 //let N = model.CreateNode(Dub(0.022 * (Var "x" + Var "x1") - Bias 0.754) - Bias(2.432), "D")
-let Y = model.CreateOutput([-1.0; 1.0; -1.0; 1.0; -1.0;], "y")
+//let Y = model.CreateOutput([-1.0; 1.0; -1.0; 1.0; -1.0;], "y")
 
 (*
 let model = Model(8)

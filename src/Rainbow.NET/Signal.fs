@@ -2,13 +2,13 @@
 open System.Numerics
 open System.Diagnostics
     type Signal =
-        | Empty
+      //  | Empty
         | Harmonic of Wave
         | Sum of Signal * Signal
         with
             member me.ToTimeDomain N =
                 let rec innerLoop (acc: float []) = function
-                    | Empty -> acc
+                //    | Empty -> acc
                     | Harmonic w -> 
                         Array.map2 (+) acc (w.ToTimeDomain N)
                     | Sum(w, z) -> 
@@ -18,20 +18,20 @@ open System.Diagnostics
             /// Get DC component of the signal
             member me.GetConstant =
                 let rec innerLoop = function
-                    | Empty -> 0.0
+                //    | Empty -> 0.0
                     | Harmonic w when w.isConstant -> w.C.Real
                     | Sum(w, z) -> innerLoop w + innerLoop z
                     | _ -> 0.0
                 innerLoop me                
             member my.Energy =
                 let rec innerLoop = function
-                    | Empty -> 0.0
+                  //  | Empty -> 0.0
                     | Harmonic w -> w.Magnitude * w.Magnitude
                     | Sum(w, z) -> innerLoop w + innerLoop z
                 innerLoop my              
             member me.TryGetWave(k) =
                 let rec innerLoop = function
-                    | Empty -> None
+                 //   | Empty -> None
                     | Harmonic h when h.k = k -> Some h
                     | Sum(w, z) -> 
                         match innerLoop w, innerLoop z with
@@ -42,7 +42,7 @@ open System.Diagnostics
                 innerLoop me
             override s.ToString() =
                 let rec innerLoop (acc: System.Text.StringBuilder) = function
-                    | Empty -> acc
+                //    | Empty -> acc
                     | Harmonic w -> Printf.bprintf acc "\t%A\n" w; acc
                     | Sum(z, w) -> (innerLoop acc z, w) ||> innerLoop
                 (innerLoop (System.Text.StringBuilder()) s).ToString()
@@ -50,8 +50,8 @@ open System.Diagnostics
             static member Zero = Signal.Constant 0.0
             static member (+) (x, y) = 
                 match x,y with
-                | Empty, x | x, Empty -> 
-                    x
+               // | Empty, x | x, Empty -> 
+             //       x
                 | Harmonic w, Harmonic z when w.k = z.k -> 
                     w + z |> Harmonic |> Signal.Normalize
                 | x, y -> 
@@ -59,12 +59,12 @@ open System.Diagnostics
             static member (-) (x: Signal, y: Signal) = x + (-1.0)*y
             static member (*) (k:float, H: Signal) = 
                 match H with
-                | Empty -> Empty
+            //    | Empty -> Empty
                 | Harmonic w -> Harmonic(k*w)
                 | Sum(x, y) -> k*x + k*y
             static member (*) (w:Signal, z: Signal) = 
                 match w, z with
-                | Empty, x | x, Empty -> x
+             //   | Empty, x | x, Empty -> x
                 | x, Sum(y, z) | Sum(y, z), x -> x*y + x*z
                 | Harmonic w, Harmonic z | Harmonic z, Harmonic w when w.isConstant ->
                     Harmonic <| Wave(z.k, z.N, z.C * w.C)
@@ -75,9 +75,8 @@ open System.Diagnostics
                        )
             static member (!^) x = 
                 match x with
-                | Empty -> Empty
-                | Harmonic w when w.isMedian -> 
-                    2.0 * w.Magnitude * w.Magnitude - 1.0 |> Signal.Constant
+                | Harmonic w when w.isMedian || w.isConstant -> 
+                     2.0 * w.Magnitude * w.Magnitude - 1.0 |> Signal.Constant
                 | Harmonic w when w.N % 2 = 0 && w.k * 2 = w.N/2 -> 
                     let a2 = 4.0*w.Magnitude*w.Magnitude in 
                     let fi2 = w.Phase * 2.0
@@ -86,21 +85,19 @@ open System.Diagnostics
                     else
                         Sum (a2 - 1.0 |> Signal.Constant, Wave(w.k * 2, w.N, a2 * cos fi2, 0.0) |> Harmonic)
                 | Harmonic w -> 
-                    let w2 = w.C * w.C in 
-                    let h = Harmonic <| Wave(w.k * 2, w.N, w2 ) |> Signal.Normalize // a2, w.Phase * 2.0) |> Signal.Normalize
-                    Sum(w2.Magnitude - 1.0 |> Signal.Constant, h) |> Signal.Collect
-                | Sum(Empty, A) -> !^A
+                    let w2 = w.C * w.C * Complex(2.0,0.0) in 
+                    let h = Harmonic <| Wave(w.k * 2, w.N, w2).Normalize // a2, w.Phase * 2.0) |> Signal.Normalize
+                    Sum(4.0 * w.Magnitude * w.Magnitude - 1.0 |> Signal.Constant, h) |> Signal.Collect
                 | Sum(A, B) -> 
-                    let sig1 = !^A  + !^B
-                    let sig2 = 4.0 * A * B
-                    sig1 + sig2 + Signal.Constant 1.0
-                        |> Signal.Collect
+                    !^A  + !^B + 4.0 * A * B + Signal.Constant 1.0 |> Signal.Collect
             /// Chancel week waves, move reflected waves to the first half of the spectrum
             static member Normalize (w: Signal) = 
                 match w with
                 | Harmonic h when h.Magnitude < Config.TOL -> 
+#if DEBUG
                     Debug.WriteLine($"Cancel {h}")
                     printfn "Cancel %A" h
+#endif
                     Signal.Zero
                 | Harmonic h when h.k < 0 ->
                     Harmonic <| Wave(-h.k, h.N, Complex.Conjugate h.C)
@@ -115,15 +112,15 @@ open System.Diagnostics
             /// Collect duplicate waves
             static member Collect (h: Signal) =
                let rec innerLoop (acc: Map<int, Signal>) = function
-                   | Empty -> acc               
+              //     | Empty -> acc               
                    | Harmonic w -> 
                         let wave = w.Normalize
                         acc.Change(wave.k, (function 
                                             | None -> 
-                                                Debug.WriteLine($"step 0 create {wave.k} {w}");     
+                                                //printfn($"step 0 create {wave.k} {w}");     
                                                 Some(Harmonic wave) 
                                             | Some V -> 
-                                                Debug.WriteLine($"step 0 update {wave.k} {V} + {w}"); 
+                                                //printfn($"step 0 update {wave.k} {V} + {w}"); 
                                                 Some(V + Harmonic wave)))
                    | Sum(x, y) -> 
                         innerLoop (innerLoop acc x) y
@@ -144,11 +141,17 @@ open System.Diagnostics
                             //                                    | Some V -> 
                             //                                        Debug.WriteLine($"step 2 update {key} {V} + {el}"); 
                             //                                        Some(V + el)))) acc
-               Debug.Write($"was {h}");
+               // printfn($"was {h}");
                let tmp =
                    h 
                     |> innerLoop Map.empty 
-                    |> Map.fold (fun acc _ el -> let nel = el in Sum(acc, nel)) Empty
-               Debug.Write($"become {tmp}");
+                    |> Map.fold (fun acc _ el ->
+                        match acc, el with
+                        | Harmonic w, Harmonic z when w.isConstant && z.isConstant ->
+                            Signal.Constant (w.C.Real + z.C.Real)
+                        | _ ->
+                            let nel = el in Sum(acc, nel)
+                       ) (Signal.Zero)
+               // printfn($"become {tmp}");
                tmp
 

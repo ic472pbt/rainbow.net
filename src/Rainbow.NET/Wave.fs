@@ -5,12 +5,14 @@ open System.Numerics
 type Wave(k, N, C: Complex) =
     let π = Math.PI
     let ππ = 2.0 * π
+    // normalized C
+    let nC = if k = 0 then Complex(C.Real,0.0) else C
     member _.k = k
     member _.N = N
     member _.Omega = if N > 0 then ππ * float k/float N else 0.0
-    member _.C = C
-    member _.Magnitude = C.Magnitude
-    member _.Phase = C.Phase
+    member _.C:Complex = nC
+    member _.Magnitude = nC.Magnitude
+    member _.Phase = nC.Phase
     member _.isConstant = k = 0
     member _.isMedian = N % 2 = 0 && k = N/2
     member _.Change newC = Wave(k, N, newC)
@@ -41,11 +43,11 @@ type Wave(k, N, C: Complex) =
     override wave.ToString() =
         match wave with
         | me when me.isConstant ->
-            $"({k}) -> Const = {wave.C.Real:f4}"
+            $"({k}) -> Const = {nC.Real:f3}"
         | me when me.isMedian ->
             $"({k}) -> Median = {wave.C.Real:f4}"
         | _ -> 
-            $"({k}) -> A = {wave.Magnitude:f4} arg = {wave.Phase:f4} C = {C.Real:f3}{if C.Imaginary < 0 then '-' else '+'}{abs C.Imaginary:f3}i"
+            $"({k}) -> A = {wave.Magnitude:f4} arg = {wave.Phase:f4} C = {nC.Real:f3}{if nC.Imaginary < 0 then '-' else '+'}{abs nC.Imaginary:f3}i"
 
     new (k, N, A, φ) = Wave(k, N, Complex.FromPolarCoordinates(A, φ))
 
