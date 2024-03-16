@@ -9,7 +9,6 @@
     <Compile Include="DSL.fs" />
     <Compile Include="Def.fs" />
     <Compile Include="Wave.fs" />
-    <Compile Include="Signal.fs" />
     <Compile Include="Waves.fs" />
     <Compile Include="Model.fs" />
   </ItemGroup>

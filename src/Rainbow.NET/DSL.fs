@@ -2,6 +2,7 @@
 open System.Diagnostics
 [<AutoOpen>]
 module DSL =
+    let inline sq x:float = x * x
     let (|>>) x f = 
         f x
         x

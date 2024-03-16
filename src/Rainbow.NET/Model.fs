@@ -66,16 +66,15 @@ type Node =
             | Dub n -> Mul(-1.0, Dub(n))
             | Color(a,b,c) -> Mul(-1.0, Color(a,b,c))
 
-
-type NodeType = Input of Signal | Node of Signal 
-    with 
-        member me.AsSignal = match me with | Input s | Node s -> s
-        member me.isInput = match me with | Input _ -> true | _ -> false
+type NodeType = Input of Harmonics | Node of Harmonics 
+with 
+    member me.AsHarmonics = match me with | Input s | Node s -> s
+    member me.isInput = match me with | Input _ -> true | _ -> false
 
 type Model(N: int) =
     let inputs = Dictionary<string, NodeType>()
     let nodes = Dictionary<string, Node>()
-    let output = Dictionary<string,Signal>()
+    let output = Dictionary<string, Harmonics>()
     with
         /// The number of waves available in the model N/2
         member _.HalfN = N/2 + 1
@@ -96,47 +95,45 @@ type Model(N: int) =
                     |> Array.mapi (fun i v -> me.CreateInput(List.rev vars[i], v))
             inputs, me.CreateOutput(vars[varNames.Length - 1], varNames[varNames.Length - 1])
         member _.CreateInput(series:IEnumerable<float>, name: string) = 
-            inputs.Add(name, Harmonics(series).ToSignal |> Input)
-            let debugString = sprintf "-> input var %s added signal \n%O" name inputs[name].AsSignal
+            inputs.Add(name, Harmonics(series) |> Input)
+            let debugString = sprintf "-> input var %s added signal \n%O" name inputs[name]
             printfn "%s" debugString; Debug.WriteLine(debugString)
-            inputs[name].AsSignal
+            inputs[name].AsHarmonics
         member _.Inputs = inputs
         member _.CreateOutput(series:IEnumerable<float>, name: string) = 
-            output.Add(name, Harmonics(series).ToSignal)
+            output.Add(name, Harmonics(series))
             printfn "-> output var %s added signal \n%O" name output[name]
             output[name]
         member _.Outputs = output
         member my.CreateNode(node, name) = 
             nodes.Add(name, node)
-            inputs.Add(name, my.nodeAsSignal node |> Node)
-            printfn "-> input var %s added signal \n%O" name inputs[name].AsSignal
-            inputs[name].AsSignal                
-        member _.nodeAsSignal node = 
+            inputs.Add(name, my.nodeAsHarmonics node |> Node)
+            printfn "-> input var %s added signal \n%O" name inputs[name]
+            inputs[name].AsHarmonics             
+        member _.nodeAsHarmonics node  = 
             let rec innerLoop = function
                 | Color(outpName, name, k) -> 
-                    match output[outpName].TryGetWave k with
-                    | Some wave ->
-                        let w = wave.Omega
-                        let φ = wave.Phase
-                        2.0 * wave.Magnitude * Harmonics(inputs[name].AsSignal.ToTimeDomain(N) |> Array.map ((*)w >> (+)φ >> cos)).ToSignal
-                    | None -> failwith $"target wave k = {k} not found in {outpName}"
-                | Bias c -> Signal.Constant c
-                | Var name -> 
-                    let varSignal = inputs[name].AsSignal
-                    varSignal
+                    let h = output[outpName] 
+                    let wave = h[k]
+                    let w = h.Omega ((float)k)
+                    let φ = wave.Phase
+                    inputs[name].AsHarmonics
+                    // wave.Magnitude * Harmonics(inputs[name].Original |> Seq.map ((*)w >> (+)φ >> cos))
+                | Bias c -> Harmonics.Constant N c
+                | Var name -> inputs[name].AsHarmonics
                 | Mul(k, n) -> k * innerLoop n
-                | Add(a, b) -> Sum(innerLoop a, innerLoop b)
-                | Dub(n) -> !^(innerLoop n |> Signal.Collect)
-            innerLoop node |> Signal.Collect
+                | Add(a, b) -> (innerLoop a) + (innerLoop b)
+                | Dub(n) -> !^(innerLoop n)
+            innerLoop node
         member _.Evaluate(x: IEnumerable<float>) =
             let rec innerLoop (inputsValues:Map<string, float>) = function
                 | Color(outpName, name, k) -> 
-                    match output[outpName].TryGetWave k with
-                    | Some wave ->
-                        let w = wave.Omega
-                        let φ = wave.Phase
-                        2.0 * wave.Magnitude * (inputsValues[name] |> ((*)w >> (+)φ >> cos))
-                    | _ -> failwith $"target wave k = {k} not found in {outpName}"
+                  //  match output[outpName].TryGetWave k with
+                  //  | Some wave ->
+                   //     let w = wave.Omega
+                   //     let φ = wave.Phase
+                   //     2.0 * wave.Magnitude * (inputsValues[name] |> ((*)w >> (+)φ >> cos))
+                   failwith $"target wave k = {k} not found in {outpName}"
                 | Bias c -> c
                 | Var name -> inputsValues[name]
                 | Mul(k, n) -> k * innerLoop inputsValues n
