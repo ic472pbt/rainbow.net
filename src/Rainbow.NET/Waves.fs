@@ -3,6 +3,7 @@ open System
 open System.Numerics
 open System.Collections.Generic
 open System.Diagnostics
+open System.Text
         
     type DFT(dftInit: Complex []) =
         static let π = Math.PI
@@ -32,6 +33,18 @@ open System.Diagnostics
         let dft = DFT(f)
         new(x: seq<float>) =
             Harmonics(DFT(x).DFT)
+        
+        override _.ToString() = 
+            let sb = new StringBuilder()
+            for k = 0 to N/2 do
+                if k = 0 then
+                    sb.AppendLine $"({k}) -> Const = {dft[k].Real:f3}"
+                elif k = N/2 then
+                    sb.AppendLine $"({k}) -> Median = {dft[k].Real:f4}"
+                else
+                    sb.AppendLine $"({k}) -> A = {dft[k].Magnitude:f4} arg = {dft[k].Phase:f4} C = {dft[k].Real:f3}{if dft[k].Imaginary < 0 then '-' else '+'}{abs dft[k].Imaginary:f3}i"
+                |> ignore
+            sb.ToString()
 
         member _.Length = N
         member _.Dft = dft.DFT
@@ -39,12 +52,12 @@ open System.Diagnostics
         member _.Omega = (*) dft.Fundament
         member _.Original = 
             seq{
-                for _ = 0 to dft.DFT.Length - 1 do
+                for i = 0 to dft.DFT.Length - 1 do
                     let mutable x = 0.0
-                    for k = 0 to dft.DFT.Length - 1 do
+                    for k = 1 to dft.DFT.Length - 1 do
                         let w = dft[k]
-                        x <- x + w.Magnitude * cos(dft.Fundament * (float)k + w.Phase)
-                    yield x
+                        x <- x + w.Magnitude * cos(dft.Fundament * (float)(k * i) + w.Phase)
+                    yield x/2.0 + dft[0].Real
             }
 
         static member Constant N (c:float) = Seq.replicate N c |> Harmonics

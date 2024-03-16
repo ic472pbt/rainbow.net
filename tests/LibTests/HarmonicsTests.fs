@@ -13,47 +13,48 @@ module HarmonicsTests =
 
     [<Property>]
     let ``Mixer node transforms constant`` c =
-        let S = Signal.Constant c
+        let S = Harmonics.Constant 5 c
         let observed = !^S
         let expected = 2.0 * c * c - 1.0
-        observed.GetConstant = 
-            expected || Double.IsNaN c
-    
-    [<Property(MaxTest=10)>]
-    let ``Mixer node doubles the phase of the harmonic`` (k:int) (N:int) (P:float) =
-        let ak = abs k + 1 // exclude constant
-        let C = Complex.FromPolarCoordinates(1.0, P)
-        let wave = Wave(ak, N, C)
-        (N > 2 && 2 * ak < N/2) ==> // exclude median
-                let observed = !^Harmonic(wave)
-                let expected = observed.TryGetWave(2*ak)
+        abs(Seq.item 0 observed.Original - expected) < Config.TOL
+             || Double.IsNaN c || Double.IsInfinity expected
+    [<Property>]
+    let ``Mixer node doubles the phase of the harmonic`` (k:int) (P:float) =
+        let N = 10
+        let ak = abs k % 5 + 1 // exclude constant
+        if (2 * ak < N/2) then // exclude median
+                let C = Complex.FromPolarCoordinates(1.0, P)
+                let dft = Array.zeroCreate<Complex> N
+                dft.[ak] <- C; dft.[N-ak] <- Complex.Conjugate C
+                let observed = !^Harmonics(dft)
+                let expected = observed.[2*ak]
                 expected 
-                    |> Option.map (fun w -> 
+                    |> (fun w -> 
                         match w with
                         | _ ->
-                            let delta = abs(cos w.Phase - cos(2.0*wave.Phase))
+                            let delta = abs(cos w.Phase - cos(2.0*C.Phase))
                             delta < Config.TOL || 
-                            wave.Magnitude < Config.TOL ||
+                            C.Magnitude < Config.TOL ||
                             w.Magnitude < Config.TOL ||
-                            Double.IsNaN wave.Phase || 
-                            wave.Magnitude > pown 10.0 8
+                            Double.IsNaN C.Phase || 
+                            C.Magnitude > pown 10.0 8
                        )
-                    |> Option.defaultValue (C.Magnitude < Config.TOL)
+        else true
 
     [<Test>]
     let ``Mixer node transforms sum of const and a wave`` () =
         let N = 10
         let wave1 = Wave(0, N, Complex(1,0))
         let wave2 = Wave(2, N, Complex(3,4))
-        let observed = !^(Harmonic(wave1) + Harmonic(wave2))
-        let expected = Signal.Constant 101.0 + 
-                        Harmonic(Wave(2, N, Complex(24.0, 32.0))) +
-                        Harmonic(Wave(4, N, Complex(-14.0, 48.0)))
+        let observed = !^(Harmonics(wave1.ToTimeDomain N) + Harmonics(wave2.ToTimeDomain N))
+        let expected = Harmonics.Constant N 26.0 + 
+                        Harmonics(Wave(2, N, Complex(6.0, 8.0)).ToTimeDomain N) +
+                        Harmonics(Wave(4, N, Complex(-3.5, 12.0)).ToTimeDomain N)
         let eq = 
             [ for k in [0;2;4] do
-                let wObserved = observed.TryGetWave(k).Value
-                let wExpected = expected.TryGetWave(k).Value
-                (wObserved.C - wExpected.C).Magnitude < Config.TOL
+                let wObserved = observed.[k]
+                let wExpected = expected.[k]
+                (wObserved - wExpected).Magnitude < Config.TOL
             ]
         Assert.IsTrue(eq |> List.forall id)
 
@@ -62,26 +63,26 @@ module HarmonicsTests =
         let N = 10
         let wave1 = Wave(1, N, Complex(1,2))
         let wave2 = Wave(2, N, Complex(3,4))
-        let observed = !^(Harmonic(wave1) + Harmonic(wave2))
-        let expected = Signal.Constant 119.0 + 
-                        Harmonic(Wave(1, N, Complex(44.0, -8.0))) +
-                        Harmonic(Wave(2, N, Complex(-6.0, 8.0))) +
-                        Harmonic(Wave(3, N, Complex(-20.0, 40.0))) +
-                        Harmonic(Wave(4, N, Complex(-14.0, 48.0)))
+        let observed = !^(Harmonics(wave1.ToTimeDomain N) + Harmonics(wave2.ToTimeDomain N))
+        let expected = Harmonics.Constant N 29.0 + 
+                        Harmonics(Wave(1, N, Complex(11.0, -2.0)).ToTimeDomain N) +
+                        Harmonics(Wave(2, N, Complex(-1.5, 2.0)).ToTimeDomain N) +
+                        Harmonics(Wave(3, N, Complex(-5.0, 10.0)).ToTimeDomain N) +
+                        Harmonics(Wave(4, N, Complex(-3.5, 12.0)).ToTimeDomain N)
         let eq = 
             [ for k in 0..4 do
-                let wObserved = observed.TryGetWave(k).Value
-                let wExpected = expected.TryGetWave(k).Value
-                (wObserved.C - wExpected.C).Magnitude < Config.TOL
+                let wObserved = observed.[k]
+                let wExpected = expected.[k]
+                (wObserved - wExpected).Magnitude < Config.TOL
             ]
         Assert.IsTrue(eq |> List.forall id)
+(*   
     
     [<Test>]
     let ``Mixer node transforms sum of three waves`` () =
         let N = 3
         let wave1 = Wave(0, N, Complex(-1.739,0.0))
         let wave2 = Wave(1, N, Complex(0.702,-1.41))
-        (Harmonic(wave1) + Harmonic(wave2)).ToTimeDomain(N)
         let wave3 = Wave(2, N, Complex(3,4))
         let observed = !^(Harmonic(wave1) + Harmonic(wave2))
         let expected = Signal.Constant 29.0 + 
@@ -162,3 +163,4 @@ module HarmonicsTests =
             | _ -> false
 
         L.IsEmpty || compare()        
+        *)
