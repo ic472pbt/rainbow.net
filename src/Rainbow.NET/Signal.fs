@@ -1,6 +1,7 @@
 ﻿namespace Rainbow.NET
 open System.Numerics
 open System.Diagnostics
+
     type Signal =
       //  | Empty
         | Harmonic of Wave
@@ -60,7 +61,7 @@ open System.Diagnostics
             static member (*) (k:float, H: Signal) = 
                 match H with
             //    | Empty -> Empty
-                | Harmonic w -> Harmonic(k*w)
+                | Harmonic w -> Harmonic(k*w )|>> log $"mul {k}*{w} => "
                 | Sum(x, y) -> k*x + k*y
             static member (*) (w:Signal, z: Signal) = 
                 match w, z with
@@ -68,6 +69,7 @@ open System.Diagnostics
                 | x, Sum(y, z) | Sum(y, z), x -> x*y + x*z
                 | Harmonic w, Harmonic z | Harmonic z, Harmonic w when w.isConstant ->
                     Harmonic <| Wave(z.k, z.N, z.C * w.C)
+                    |>> log $"mul {w}*{z} => "
                 | Harmonic w, Harmonic z -> 
                     Sum(
                         Harmonic <| Wave(w.k + z.k, w.N, w.Magnitude * z.Magnitude * 0.5, w.Phase + z.Phase) |> Signal.Normalize, 
@@ -77,6 +79,7 @@ open System.Diagnostics
                 match x with
                 | Harmonic w when w.isMedian || w.isConstant -> 
                      2.0 * w.Magnitude * w.Magnitude - 1.0 |> Signal.Constant
+                     |>> log $"const {w} => "
                 | Harmonic w when w.N % 2 = 0 && w.k * 2 = w.N/2 -> 
                     let a2 = 4.0*w.Magnitude*w.Magnitude in 
                     let fi2 = w.Phase * 2.0
@@ -85,11 +88,12 @@ open System.Diagnostics
                     else
                         Sum (a2 - 1.0 |> Signal.Constant, Wave(w.k * 2, w.N, a2 * cos fi2, 0.0) |> Harmonic)
                 | Harmonic w -> 
-                    let w2 = w.C * w.C * Complex(2.0,0.0) in 
+                    let w2 = w.C * w.C * Complex(2.0, 0.0)  in 
                     let h = Harmonic <| Wave(w.k * 2, w.N, w2).Normalize // a2, w.Phase * 2.0) |> Signal.Normalize
                     Sum(4.0 * w.Magnitude * w.Magnitude - 1.0 |> Signal.Constant, h) |> Signal.Collect
+                    |>> log $"wave {w} => "
                 | Sum(A, B) -> 
-                    !^A  + !^B + 4.0 * A * B + Signal.Constant 1.0 |> Signal.Collect
+                    !^A  + !^B + 8.0 * A * B + Signal.Constant 1.0 |> Signal.Collect
             /// Chancel week waves, move reflected waves to the first half of the spectrum
             static member Normalize (w: Signal) = 
                 match w with

@@ -29,7 +29,7 @@ type Wave(k, N, C: Complex) =
             let w = wave.Omega in            
             [0..N-1] 
                 |> List.map float 
-                |> List.map (fun t -> 2.0*C.Magnitude * cos(w * t + C.Phase)) 
+                |> List.map (fun t -> 2.0 * C.Magnitude * cos(w * t + C.Phase)) 
                 |> List.toArray
     /// Normalize reflected waves
     member wave.Normalize =

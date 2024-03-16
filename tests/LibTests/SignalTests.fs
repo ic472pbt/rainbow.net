@@ -40,6 +40,62 @@ module SignalTests =
                        )
                     |> Option.defaultValue (C.Magnitude < Config.TOL)
 
+    [<Test>]
+    let ``Mixer node transforms sum of const and a wave`` () =
+        let N = 10
+        let wave1 = Wave(0, N, Complex(1,0))
+        let wave2 = Wave(2, N, Complex(3,4))
+        let observed = !^(Harmonic(wave1) + Harmonic(wave2))
+        let expected = Signal.Constant 101.0 + 
+                        Harmonic(Wave(2, N, Complex(24.0, 32.0))) +
+                        Harmonic(Wave(4, N, Complex(-14.0, 48.0)))
+        let eq = 
+            [ for k in [0;2;4] do
+                let wObserved = observed.TryGetWave(k).Value
+                let wExpected = expected.TryGetWave(k).Value
+                (wObserved.C - wExpected.C).Magnitude < Config.TOL
+            ]
+        Assert.IsTrue(eq |> List.forall id)
+
+    [<Test>]
+    let ``Mixer node transforms sum of a wave and a wave`` () =
+        let N = 10
+        let wave1 = Wave(1, N, Complex(1,2))
+        let wave2 = Wave(2, N, Complex(3,4))
+        let observed = !^(Harmonic(wave1) + Harmonic(wave2))
+        let expected = Signal.Constant 119.0 + 
+                        Harmonic(Wave(1, N, Complex(44.0, -8.0))) +
+                        Harmonic(Wave(2, N, Complex(-6.0, 8.0))) +
+                        Harmonic(Wave(3, N, Complex(-20.0, 40.0))) +
+                        Harmonic(Wave(4, N, Complex(-14.0, 48.0)))
+        let eq = 
+            [ for k in 0..4 do
+                let wObserved = observed.TryGetWave(k).Value
+                let wExpected = expected.TryGetWave(k).Value
+                (wObserved.C - wExpected.C).Magnitude < Config.TOL
+            ]
+        Assert.IsTrue(eq |> List.forall id)
+    
+    [<Test>]
+    let ``Mixer node transforms sum of three waves`` () =
+        let N = 3
+        let wave1 = Wave(0, N, Complex(-1.739,0.0))
+        let wave2 = Wave(1, N, Complex(0.702,-1.41))
+        (Harmonic(wave1) + Harmonic(wave2)).ToTimeDomain(N)
+        let wave3 = Wave(2, N, Complex(3,4))
+        let observed = !^(Harmonic(wave1) + Harmonic(wave2))
+        let expected = Signal.Constant 29.0 + 
+                        Harmonic(Wave(1, N, Complex(11.0, -2.0))) +
+                        Harmonic(Wave(2, N, Complex(-1.5, 2.0))) +
+                        Harmonic(Wave(3, N, Complex(-5.0, 10.0))) +
+                        Harmonic(Wave(4, N, Complex(-3.5, 12.0)))
+        let eq = 
+            [ for k in 0..4 do
+                let wObserved = observed.TryGetWave(k).Value
+                let wExpected = expected.TryGetWave(k).Value
+                (wObserved.C - wExpected.C).Magnitude < Config.TOL
+            ]
+        Assert.IsTrue(eq |> List.forall id)
     [<Property>]
     let ``Mixer node calculated DFT output and directly calculated DFT are equal`` (L: float list) =
         match L with
@@ -48,7 +104,6 @@ module SignalTests =
         | L when L |> List.exists (Double.IsNaN) -> true
         | _ ->
             let mixedSignal = !^Harmonics(L).ToSignal
-            mixedSignal.ToTimeDomain(3)
             let observed = 
                 L 
                 |> List.mapi (fun i _ ->  

@@ -6,6 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="DSL.fs" />
     <Compile Include="Def.fs" />
     <Compile Include="Wave.fs" />
     <Compile Include="Signal.fs" />

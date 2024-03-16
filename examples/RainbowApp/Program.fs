@@ -1,7 +1,7 @@
 ﻿open Rainbow.NET
 
 let model = Model(4)
-let X = model.CreateInput([1.86616641; 1.942815513; -0.5760611293],"x")
+let X = model.CreateInput([0.0; 0.4534362949; 0.5781807448; 0.9308030504; -0.5721301726],"x")
 //let X = model.CreateInput([-33.33; 89.67; -33.33; 88.67; -27.33], "x")
 //let X1 = model.CreateInput([-32.33; 88.67; -33.33; 89.67; -27.33], "x1")
 let O = Var "x" 
