@@ -21,9 +21,9 @@ namespace RainbowStudio
         private List<double> selectedSeries = new();
         private readonly int N;
         private Model? model = null;
-        private Signal? outputSignal;
+        private Harmonics? outputSignal;
         private string OutputName = string.Empty;
-        private Dictionary<string, Signal> inputSignals = new();
+        private Dictionary<string, Harmonics> inputSignals = new();
 
         private readonly Chart chart;
         public OneD_conv(Dictionary<string, List<double>> inputSeries, Dictionary<string, List<double>> outputSeries)
@@ -295,24 +295,24 @@ namespace RainbowStudio
             for (int k = 0; k <= sampleSeries[OutputsListCb.Text].Count / 2; k++)
             {
                 // DFT calculated here
-                var wave = signal?.TryGetWave(k);
+                var wave = signal?.Dft[k];
                 if (wave != null)
                 {
                     var waveVal = wave.Value;
-                    TargetRainbowDg.Rows[k].Cells["k"].Value = waveVal.k;
-                    TargetRainbowDg.Rows[k].Cells["Fourier"].Value = $"{waveVal.C.Real:f3} + {waveVal.C.Imaginary:f3}";
-                    TargetRainbowDg.Rows[k].Cells["Magnitude"].Value = waveVal.C.Magnitude;
-                    TargetRainbowDg.Rows[k].Cells["Phase"].Value = waveVal.C.Phase;
-                    sumSq += waveVal.C.Magnitude * waveVal.C.Magnitude;
+                    TargetRainbowDg.Rows[k].Cells["k"].Value = k;
+                    TargetRainbowDg.Rows[k].Cells["Fourier"].Value = $"{waveVal.Real:f3} + {waveVal.Imaginary:f3}";
+                    TargetRainbowDg.Rows[k].Cells["Magnitude"].Value = waveVal.Magnitude;
+                    TargetRainbowDg.Rows[k].Cells["Phase"].Value = waveVal.Phase;
+                    sumSq += waveVal.Magnitude * waveVal.Magnitude;
                 }
             }
             for (int k = 0; k <= sampleSeries[OutputsListCb.Text].Count / 2; k++)
             {
-                var wave = signal?.TryGetWave(k);
+                var wave = signal?.Dft[k];
                 if (wave != null)
                 {
                     var waveVal = wave.Value;
-                    TargetRainbowDg.Rows[k].Cells["Energy"].Value = $"{waveVal.C.Magnitude * waveVal.C.Magnitude / sumSq * 100.0:f3}%";
+                    TargetRainbowDg.Rows[k].Cells["Energy"].Value = $"{waveVal.Magnitude * waveVal.Magnitude / sumSq * 100.0:f3}%";
                 }
             }
         }
@@ -344,12 +344,11 @@ namespace RainbowStudio
                         SubnetsDg.Rows[idx].Cells["Formula"].Value = model.Nodes[kv.Key].ToString();
                     for (int k = 0; k < model.HalfN; k++)
                     {
-                        var wave = kv.Value.TryGetWave(k);
-                        if (wave is not null)
-                            if (wave.Value.isConstant)
-                                SubnetsDg.Rows[idx].Cells[$"wave{k}"].Value = wave.Value.C.Real;
-                            else
-                                SubnetsDg.Rows[idx].Cells[$"wave{k}"].Value = wave.Value.C;
+                        var wave = kv.Value.Dft[k];
+                        if (k == 0)
+                            SubnetsDg.Rows[idx].Cells[$"wave{k}"].Value = wave.Real;
+                        else
+                            SubnetsDg.Rows[idx].Cells[$"wave{k}"].Value = wave;
                     }
                 }
             }

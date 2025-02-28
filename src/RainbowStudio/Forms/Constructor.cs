@@ -18,12 +18,12 @@ namespace RainbowStudio.Forms
     public partial class Constructor : Form
     {
         private readonly Model model;
-        internal readonly Dictionary<string, Signal> inputSignals;
-        private readonly Signal outputSignal;
+        internal readonly Dictionary<string, Harmonics> inputSignals;
+        private readonly Harmonics outputSignal;
         private readonly string OutputName;
         private string? SelectedInput = null;
 
-        public Constructor(Model model, Dictionary<string, Signal> inputSignals, Signal outputSignal, string OutputName)
+        public Constructor(Model model, Dictionary<string, Harmonics> inputSignals, Harmonics outputSignal, string OutputName)
         {
             InitializeComponent();
 
@@ -41,8 +41,8 @@ namespace RainbowStudio.Forms
                 StructureDg.Columns.Add(new DataGridViewTextBoxColumn() { Name = item.Key, HeaderText = item.Key, AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells });
                 for (int i = 0; i < N; i++)
                 {
-                    var wave = item.Value.TryGetWave(i);
-                    if (wave is not null) StructureDg.Rows[i].Cells[item.Key].Value = wave.Value.C;
+                    var wave = item.Value.Dft[i];
+                    StructureDg.Rows[i].Cells[item.Key].Value = wave;
                 }
             }
         }
@@ -160,7 +160,7 @@ namespace RainbowStudio.Forms
             var X = Matrix<double>.Build.DenseOfArray(A);
             List<double> bList = new();
             List<int> Blocks = new();
-            FSharpOption<Wave> wave;
+            Complex wave;
             SelectedInput = null;
             foreach (DataGridViewRow row in MatrixDg.Rows)
             {
@@ -169,14 +169,14 @@ namespace RainbowStudio.Forms
                     Complex C;
                     if (inputSignals.ContainsKey((string)DrainLb.SelectedItem))
                     {
-                        wave = inputSignals[(string)DrainLb.SelectedItem].TryGetWave((int)row.Tag);
-                        if (wave is not null) C = wave.Value.C; else C = 0.0;
+                        wave = inputSignals[(string)DrainLb.SelectedItem].Dft[(int)row.Tag];
+                        C = wave;
                         SelectedInput = (string)DrainLb.SelectedItem;
                     }
                     else
                     {
-                        wave = outputSignal.TryGetWave((int)row.Tag);
-                        if (wave is not null) C = wave.Value.C; else C = 0.0;
+                        wave = outputSignal.Dft[(int)row.Tag];
+                        C = wave;
                     }
                     if ((int)row.Tag == 0)
                     {
@@ -221,8 +221,8 @@ namespace RainbowStudio.Forms
             {
                 node -= Node.NewVar(SelectedInput);
                 // also cancel the constant
-                var bias = model.nodeAsSignal(node).GetConstant;
-                node -= Node.NewBias(bias);
+                var bias = model.nodeAsHarmonics(node).Dft[0];
+                node -= Node.NewBias(bias.Real);
             }
             Debug.WriteLine($"Adding {NodeNameTb.Text}");
             var signal = model.CreateNode(node, NodeNameTb.Text);
@@ -239,12 +239,11 @@ namespace RainbowStudio.Forms
             {
                 double EnergyCorrection = 1.0 / Math.Sqrt(inputSignals[c.Name].Energy);
                 node += EnergyCorrection * Node.NewVar(c.Name);
-                BiasCorrection += inputSignals[c.Name].GetConstant * EnergyCorrection;
+                BiasCorrection += inputSignals[c.Name].DC * EnergyCorrection;
             }
             node = Node.NewDub(node - Node.NewBias(BiasCorrection));
-            var wave = model.nodeAsSignal(node).TryGetWave(0);
-            if (wave is not null)
-                node -= Node.NewBias(wave.Value.C.Real);
+            var DC = model.nodeAsHarmonics(node).DC;
+            node -= Node.NewBias(DC);
             Debug.WriteLine($"Adding {NodeNameTb.Text}");
             var signal = model.CreateNode(node, NodeNameTb.Text);
             inputSignals.Add(NodeNameTb.Text, signal);
@@ -269,8 +268,8 @@ namespace RainbowStudio.Forms
             // If drained to the other signal adjust the bias
             if (DrainLb.SelectedItem is not null)
             {
-                var bias = model.nodeAsSignal(node).GetConstant;
-                node += Node.NewBias(outputSignal.GetConstant - bias);
+                var bias = model.nodeAsHarmonics(node).DC;
+                node += Node.NewBias(outputSignal.DC - bias);
             }
 
             var signal = model.CreateNode(node, NodeNameTb.Text);

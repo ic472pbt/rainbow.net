@@ -47,7 +47,7 @@ namespace RainbowStudio.Forms
 
         private void CalculateFourier()
         {
-            var signal = new Harmonics(X).ToSignal;
+            var signal = new Harmonics(X);
             // add phase shifts for future columns
             for (int c = 2; c <= convolutionWindow; c++)
             {
@@ -68,18 +68,17 @@ namespace RainbowStudio.Forms
             for (int k = 0; k <= X.Length / 2; k++)
             {
                 // DFT calculated here
-                var wave = signal.TryGetWave(k);
-                if (wave != null)
+                var wave = signal.Dft[k];
                 {
-                    var waveVal = wave.Value;
-                    spectrumGv.Rows[k].Cells["k"].Value = waveVal.k;
-                    spectrumGv.Rows[k].Cells["Real"].Value = waveVal.C.Real;
-                    spectrumGv.Rows[k].Cells["Imaginary"].Value = waveVal.C.Imaginary;
-                    spectrumGv.Rows[k].Cells["A"].Value = waveVal.C.Magnitude;
-                    spectrumGv.Rows[k].Cells["φ"].Value = waveVal.C.Phase;
+                    var waveVal = wave;
+                    spectrumGv.Rows[k].Cells["k"].Value = k;
+                    spectrumGv.Rows[k].Cells["Real"].Value = waveVal.Real;
+                    spectrumGv.Rows[k].Cells["Imaginary"].Value = waveVal.Imaginary;
+                    spectrumGv.Rows[k].Cells["A"].Value = waveVal.Magnitude;
+                    spectrumGv.Rows[k].Cells["φ"].Value = waveVal.Phase;
                     for (int c = 1; c < convolutionWindow; c++)
                     {
-                        spectrumGv.Rows[k].Cells[4 + c].Value = waveVal.C.Phase + c * waveVal.Omega;
+                        spectrumGv.Rows[k].Cells[4 + c].Value = waveVal.Phase + c * signal.Omega.Invoke(k);
                     }
                 }
             }

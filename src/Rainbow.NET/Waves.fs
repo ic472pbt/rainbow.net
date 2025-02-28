@@ -47,6 +47,8 @@ open System.Text
             sb.ToString()
 
         member _.Length = N
+        member _.Energy = dft.DFT |> Array.sumBy (fun c -> c.Magnitude * c.Magnitude)
+        member _.DC = dft[0].Real
         member _.Dft = dft.DFT
         member _.Item i = Seq.item i f
         member _.Omega = (*) dft.Fundament

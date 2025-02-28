@@ -9,7 +9,9 @@ Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "RainbowApp", "..\..\example
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RainbowStudio", "..\RainbowStudio\RainbowStudio.csproj", "{CDAD970B-CA60-472D-BFA9-C6CFD817824A}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "LibTests", "..\..\tests\LibTests\LibTests.fsproj", "{5E0564D9-7184-4E30-9978-3161DD43AEF8}"
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "LibTests", "..\..\tests\LibTests\LibTests.fsproj", "{5E0564D9-7184-4E30-9978-3161DD43AEF8}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "ColorNames", "..\..\examples\ColorNames\ColorNames.fsproj", "{4291F5BC-3D84-4632-804A-300F70A408AB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{5E0564D9-7184-4E30-9978-3161DD43AEF8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5E0564D9-7184-4E30-9978-3161DD43AEF8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5E0564D9-7184-4E30-9978-3161DD43AEF8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4291F5BC-3D84-4632-804A-300F70A408AB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4291F5BC-3D84-4632-804A-300F70A408AB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4291F5BC-3D84-4632-804A-300F70A408AB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4291F5BC-3D84-4632-804A-300F70A408AB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
