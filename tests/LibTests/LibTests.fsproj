@@ -9,6 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="ChebyshevTests.fs" />
     <Compile Include="HarmonicsTests.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
